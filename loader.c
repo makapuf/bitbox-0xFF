@@ -19,7 +19,7 @@ inline uint8_t minimap(const int x,const int y)
 // objects 0-4 are levels ! 
 inline uint8_t get_property(const int object_id, const int property) 
 {
-	return data[(15*16+object_id%16)*256+property+16 + (object_id>16)];
+	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
 }
 
 void interpret_spritetypes()
@@ -78,9 +78,16 @@ void interpret_spritetypes()
 			spt->w = 16*((15+spt->hitx2)/16);
 			spt->h = 16*((15+spt->hity2)/16);
 
-		} else {
-			spt->color=TRANSPARENT;
+		} else {			
+			// force to 1x1 full
 			message ("    spritetype %d in error \n",id);
+			spt->hitx1=0;
+			spt->hity1=0;
+			spt->hitx2=15;
+			spt->hity2=15;
+			spt->w = 16;
+			spt->h = 16;
+
 			continue;
 		}
 

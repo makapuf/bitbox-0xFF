@@ -41,6 +41,15 @@ void title_line8(void)
 	}
 }
 
+static inline void blit8(char *draw8, const int chr, const int pos) 
+{
+	for (int i=0;i<8;i++) {
+		uint8_t c=data[15*16*256+64+i+chr*8+(vga_line-8)*256];
+		if (c!=TRANSPARENT)
+			draw8[pos+i]=c;
+	}
+}
+
 void screen_line8(void)
 {
 	// XXX handle x/y offset negative ?
@@ -76,10 +85,8 @@ void screen_line8(void)
 			  ,16);
 	}
 
-	// TODO flip with direction / type
-
 	// draw all sprites 
-	for (int spr_id=MAX_SPRITES;spr_id>=0;spr_id--) { // reverse order for draw priority
+	for (int spr_id=MAX_SPRITES-1;spr_id>=0;spr_id--) { // reverse order for draw priority
 		struct Sprite *spr=&sprite[spr_id];
 		if (spr->type==TRANSPARENT) 
 			continue;
@@ -89,15 +96,16 @@ void screen_line8(void)
 		if ( abs_y >= spr->y  && \
 			 abs_y <  spr->y + spt->h)
 		{
-			if (spr->x-camera_x>=0 && spr->x+spt->w-camera_x<320) { // TODO better clipping
-				for (int i=0;i<spt->w;i++) { // w=16,32,48. use it!
-					uint8_t c=data[
-						(spt->y+vga_line-spr->y+camera_y)*IMAGE_WIDTH+\
-						spt->x + (spr->hflip?spt->w-1-i:i) + spr->frame*spt->w
-						];
-					if (c != TRANSPARENT) {
-						draw8[spr->x-camera_x+i]=c;
-					}
+			int start = spr->x-camera_x>=0 ? 0:camera_x-spr->x;
+			int end = spr->x+spt->w-camera_x<320 ? spt->w : 320+camera_x-spr->x;
+			// TODO start / end are frame-based, avoid recompute ?
+			for (int i=start;i<end;i++) { // TODO w=16,32,48. use it!
+				uint8_t c=data[
+					(spt->y+vga_line-spr->y+camera_y)*IMAGE_WIDTH+\
+					spt->x + (spr->hflip?spt->w-1-i:i) + spr->frame*spt->w
+					];
+				if (c != TRANSPARENT) {
+					draw8[spr->x-camera_x+i]=c;
 				}
 			}
 		}
@@ -106,10 +114,31 @@ void screen_line8(void)
 	// TODO return sprites to position if out / killed
 
 	// HUD
-	if (vga_line<8) {
+
+	if ((vga_line-8)<8) {
 		// lives
-		// time
+		blit8(draw8, 256,8*8);
+		blit8(draw8, lives,9*8);
+
 		// level / world
+		blit8(draw8, 256+3,11*8);
+		blit8(draw8, 256+8,12*8);
+		blit8(draw8, 256+3,13*8);
+		blit8(draw8, level+1,14*8);
+
+		// time
+		blit8(draw8, 256+4,16*8);
+		blit8(draw8, vga_frame/6000,17*8);
+		blit8(draw8, (vga_frame/600)%10,18*8);
+		blit8(draw8, (vga_frame/60)%10,19*8);
+
+		// keys
+		
+		// coins
+		blit8(draw8, 256+6,22*8);
+		blit8(draw8, coins/10,23*8);
+		blit8(draw8, coins%10,24*8);
+
 
 	}
 
@@ -123,7 +152,7 @@ void graph_line8()
 
 	if (game_state==FS_Title)
 		title_line8();
- 	else if (game_state==FS_Interpreted)
+ 	else if (game_state==FS_Interpreted || game_state==FS_Die)
 		screen_line8();
 	else {
 		// dark blue

@@ -38,7 +38,7 @@ blue (#7) square is first level
 
 /* interpret pixel colors as terrains - terrains are >64 */
 enum TerrainColors {
-	terrain_empty=87, // 
+	terrain_empty=87, // empty
 	terrain_alt =181, // alt empty
 
 	terrain_obstacle=104, 
@@ -50,6 +50,7 @@ enum TerrainColors {
 	terrain_kill=240, // lava, spikes ...
 
 	terrain_ladder = 147,
+	terrain_ice = 151, 
 
 	terrain_start=255, // only one, replaced by its above value
 };
@@ -125,23 +126,26 @@ enum spritetype_movement {
 	mov_bulletL = 8,  // flies, not stopped by blocks, no gravity, right to left. 1frame
 	mov_bulletR = 9,  // flies, not stopped by blocks, no gravity, left to right. 1frame
 	mov_bulletD = 10,  // flies, not stopped by blocks, no gravity, goes down. 2frames
-	
 
-	mov_ladder = 12,  // stays on ladders. right to left, go back to right if finds border. 1 frame alternating
+	mov_bulletLv2 = 11,  // flies, a bit faster than preceding
+	mov_bulletRv2 = 12,  // flies, a bit faster than preceding
+	
+	mov_generator = 224, // does not move, generates each ~2 seconds enemy with id just after this one. 2fr (just before)
+
+	mov_ladder = 15,  // stays on ladders. right to left, go back to right if finds border. 1 frame alternating
 };
 
 
 // collision with player
 enum sprite_collide {
 	col_none = TRANSPARENT, // no collision
-	col_kill = 224, // red, kills player instantly
-	col_block = 208, // blocks the player - can throw it from edges...
+	col_kill = terrain_kill, // 240 - red, kills player instantly
+	col_block = terrain_obstacle, // blocks the player - can throw it from edges...
 
 	col_coin = 249, // yellow, gives a coin - or N=next , 50 of them gives a life
 	col_life = 25,  // green, gives a life
 	col_key  = 137, // gives a key
 	
-
 
 	col_spawn, // creates a new object (inplace) - type is next pixel
 	col_span2, // spawns two identical elements
@@ -243,6 +247,7 @@ enum GameState {
 	FS_Title, // title data
 	FS_Level, // level raw data
 	FS_Interpreted, // interpreted level data
+	FS_Die, // dying animation
 };
 
 
@@ -261,7 +266,7 @@ extern int camera_x, camera_y; // vertical position of the title/scroll
 extern struct SpriteType sprtype[NB_SPRITETYPES]; 
 extern struct Sprite sprite[MAX_SPRITES];
 
-extern int lives;
+extern int lives, coins, level, keys;
 
 // functions -
 // -----------------------------------
@@ -275,6 +280,7 @@ void interpret_terrains();
 void interpret_spritetypes();
 
 uint8_t get_terrain(const uint8_t tile_id);
+void player_kill();
 
 
 /*
