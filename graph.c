@@ -1,5 +1,7 @@
 #include <string.h>
 
+/* All screen blitting */
+
 #include "bitbox.h"
 #include "game.h"
 

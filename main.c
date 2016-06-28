@@ -73,145 +73,6 @@ inline uint8_t terrain_at(int x, int y)
 }
 
 
-static inline int sprite_left(const struct Sprite *spr)
-{
-	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->x+spt->hitx1;
-}
-
-static inline int sprite_right(const struct Sprite *spr)
-{
-	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->x+spt->hitx2;
-}
-
-static inline int sprite_top(const struct Sprite *spr)
-{
-	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->y+spt->hity1;
-}
-
-static inline int sprite_bottom(const struct Sprite *spr)
-{
-	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->y+spt->hity2;
-}
-
-
-// http://kishimotostudios.com/articles/aabb_collision/
-static inline int sprite_collide(const struct Sprite *a,const struct Sprite *b) {
-	if (sprite_left(a) > sprite_right(b)) return 0; // A isToTheRightOf B
-	if (sprite_right(a) < sprite_left(b)) return 0; // A isToTheLeftOf B
- 	if (sprite_bottom(a) < sprite_top(b)) return 0; // A is above B
- 	if (sprite_top(a) > sprite_bottom(b)) return 0; // AisBelowB
-  	return 1;
-}
-
-
-/* checks which terrain this tile collides with returns one terrain for 
-the sprite even if sevearl collide.
-Returns : terrain type
- */
-uint8_t collision_tile(const struct Sprite *spr)
-{
-	// TODO in the level only !
-	// TODO check for larger sprites (while +16 until hitx2 ... )
-	// checks collision between tile and terrain. returns most interesting tile type
-	if (spr->y>=4096) return terrain_empty;
-	uint8_t t = terrain_at(sprite_left(spr),sprite_top(spr));
-
-	if (t==terrain_empty) t = terrain_at(sprite_right(spr),sprite_top(spr));
-	if (t==terrain_empty) t = terrain_at(sprite_left(spr),sprite_bottom(spr));
-	if (t==terrain_empty) t = terrain_at(sprite_right(spr),sprite_bottom(spr));
-	return t;
-}
-
-void move_sprite(struct Sprite *spr)
-{
-	struct SpriteType *spt = &sprtype[spr->type];
-
-	switch(spt->movement) {
-
-		// simple animations --------------------
-		
-		// fast alternate, no move
-		case mov_alternate1 : 
-			spr->frame = (vga_frame/16)%2;
-			break;
-
-		// slow alternate, no move
-		case mov_alternate2 : 
-			spr->frame = (vga_frame/32)%2;
-			break;
-
-		// fast pingpong 3 frames, no move
-		case mov_alternate3 : 
-			spr->frame = (uint8_t[]){0,1,2,1}[(vga_frame/8)%4];
-			break;
-
-		// cycling 4 frames, no move
-		case mov_alternate4 : 
-			spr->frame = (vga_frame/8)%4;
-			break;
-
-		// 4 frames and disappear
-		case mov_singleanim : 
-			if (vga_frame%8==0) {
-				spr->frame++;
-				if (spr->frame == 4) 
-					spr->y=65536;
-			}
-			break;
-
-		// 1 frame, going up and down
-		case mov_throbbing : 
-			if ((vga_frame%32)==0)
-				spr->y +=1;
-			else if (vga_frame%32==16)
-				spr->y -=1;
-			break;
-
-		case mov_bulletL : // 1 frame, l to r
-			if (vga_frame%2==0) spr->x-=3;
-			break;
-
-		case mov_bulletLv2 : 
-			spr->x-=2;
-			break;
-
-		case mov_bulletR : // 1 frame, l to r
-			if (vga_frame%2==0) spr->x+=3;
-			spr->hflip=1;
-			break;
-
-		// gravity based ---------------
-		case mov_walk : 
-			spr->frame = (vga_frame/16)%2; // alternate 2 frames
-			if (spr->vx==0) { // start
-				// drop to floor
-				while (terrain_at(spr->x+spt->hitx1, spr->y+spt->hity2+1)==terrain_empty) 
-					spr->y++; 
-				spr->vx=1; // start going right
-			} else if (terrain_at(
-					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1),
-					spr->y+spt->hity2
-					)!=terrain_empty || 
-				terrain_at(
-					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1), 
-					spr->y+spt->hity2+1
-					)==terrain_empty
-				) 
-			{
-				spr->vx = -spr->vx;
-			}
-
-			spr->x += spr->vx;
-			spr->hflip = spr->vx<0; // left means reverse
-			break;
-	} 
-
-}
-
 inline int can_move_hori(uint8_t terrain) {
 	return !(terrain == terrain_ice || terrain == terrain_obstacle);
 }
@@ -345,36 +206,191 @@ void move_player(struct Sprite *spr)
 }
 
 
-void sprite_collide_player(struct Sprite *spr)
-{	
+static inline int sprite_left(const struct Sprite *spr)
+{
+	struct SpriteType *spt = &sprtype[spr->type];
+	return spr->x+spt->hitx1;
+}
 
+static inline int sprite_right(const struct Sprite *spr)
+{
+	struct SpriteType *spt = &sprtype[spr->type];
+	return spr->x+spt->hitx2;
+}
+
+static inline int sprite_top(const struct Sprite *spr)
+{
+	struct SpriteType *spt = &sprtype[spr->type];
+	return spr->y+spt->hity1;
+}
+
+static inline int sprite_bottom(const struct Sprite *spr)
+{
+	struct SpriteType *spt = &sprtype[spr->type];
+	return spr->y+spt->hity2;
+}
+
+
+// http://kishimotostudios.com/articles/aabb_collision/
+static inline int sprite_collide(const struct Sprite *a,const struct Sprite *b) {
+	if (sprite_left(a) > sprite_right(b)) return 0; // A isToTheRightOf B
+	if (sprite_right(a) < sprite_left(b)) return 0; // A isToTheLeftOf B
+ 	if (sprite_bottom(a) < sprite_top(b)) return 0; // A is above B
+ 	if (sprite_top(a) > sprite_bottom(b)) return 0; // AisBelowB
+  	return 1;
+}
+
+
+/* checks which terrain this tile collides with returns one terrain for 
+the sprite even if several collide.
+Returns : terrain type
+ */
+uint8_t collision_tile(const struct Sprite *spr)
+{
+	// TODO in the level only !
+	// TODO check for larger sprites (while +16 until hitx2 ... )
+	// checks collision between tile and terrain. returns most interesting tile type
+	if (spr->y>=4096) return terrain_empty;
+	uint8_t t = terrain_at(sprite_left(spr),sprite_top(spr));
+
+	if (t==terrain_empty) t = terrain_at(sprite_right(spr),sprite_top(spr));
+	if (t==terrain_empty) t = terrain_at(sprite_left(spr),sprite_bottom(spr));
+	if (t==terrain_empty) t = terrain_at(sprite_right(spr),sprite_bottom(spr));
+	return t;
+}
+
+void sprite_move(struct Sprite *spr)
+{
 	struct SpriteType *spt = &sprtype[spr->type];
 
-	switch(spt->collision) {
-		case col_none : 
-			break;
+	switch(spt->movement) {
+
+		// simple animations --------------------
 		
-		message("handling collision of type %d with player !\n", spt->collision);
-		case col_coin : 
-			// adds coin, small sfx + animations, remove
-			coins += 1;
-			spr->type=TRANSPARENT; // remove
+		// fast alternate, no move
+		case mov_alternate1 : 
+			spr->frame = (vga_frame/16)%2;
 			break;
 
-		case col_kill : 
-			player_kill();
+		// slow alternate, no move
+		case mov_alternate2 : 
+			spr->frame = (vga_frame/32)%2;
 			break;
 
-		default : 
-			message("unhandled collision type %d\n", spt->collision);
+		// fast pingpong 3 frames, no move
+		case mov_alternate3 : 
+			spr->frame = (uint8_t[]){0,1,2,1}[(vga_frame/8)%4];
 			break;
-	}
 
+		// cycling 4 frames, no move
+		case mov_alternate4 : 
+			spr->frame = (vga_frame/8)%4;
+			break;
+
+		// 4 frames and disappear (fast)
+		case mov_singleanim4 : 
+			if (vga_frame%8==0) {
+				spr->frame++;
+				if (spr->frame == 4) {
+					spr->type=TRANSPARENT;
+					spr->y=65536;
+					// kill spawn ?
+				}
+			}
+			break;
+
+		// 2 frames and disappear (fast)
+		case mov_singleanim2 : 
+			if (vga_frame%8==0) {
+				spr->frame++;
+				if (spr->frame == 2) {
+					spr->type=TRANSPARENT;
+					spr->y=65536;
+					// kill spawn ?
+				}
+			}
+			break;
+
+		// 1 frame, going up and down
+		case mov_throbbing : 
+			if ((vga_frame%32)==0)
+				spr->y +=1;
+			else if (vga_frame%32==16)
+				spr->y -=1;
+			break;
+
+		case mov_bulletL : // 1 frame, l to r
+			if (vga_frame%2==0) spr->x-=3;
+			break;
+
+		case mov_bulletLv2 : 
+			spr->x-=2;
+			break;
+
+		case mov_bulletR : // 1 frame, l to r
+			if (vga_frame%2==0) spr->x+=3;
+			spr->hflip=1;
+			break;
+
+		// gravity based ---------------
+		case mov_walk : 
+			spr->frame = (vga_frame/16)%2; // alternate 2 frames
+			if (spr->vx==0) { // start
+				// drop to floor
+				while (terrain_at(spr->x+spt->hitx1, spr->y+spt->hity2+1)==terrain_empty) 
+					spr->y++; 
+				spr->vx=1; // start going right
+			} else if (terrain_at(
+					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1),
+					spr->y+spt->hity2
+					)!=terrain_empty || 
+				terrain_at(
+					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1), 
+					spr->y+spt->hity2+1
+					)==terrain_empty
+				) 
+			{
+				spr->vx = -spr->vx;
+			}
+
+			spr->x += spr->vx;
+			spr->hflip = spr->vx<0; // left means reverse
+			break;
+	} 
 
 }
 
+inline struct Sprite *spawn_sprite(uint8_t type, int x, int y)
+{
+	int pos=0;
+
+	// find a proper empty place to pos
+	for (pos=0;sprite[pos].type!=TRANSPARENT;pos++);
+
+	sprite[pos].x  = x;
+	sprite[pos].y  = y;
+	sprite[pos].type = type;
+	sprite[pos].vx = 0;
+	sprite[pos].vy = 0;
+	sprite[pos].frame = 0;
+
+	sprite[pos].hflip=0; 
+
+	message ("starting sprite %d type %d @ %d,%d onscreen\n",pos,type,sprite[pos].x-camera_x,sprite[pos].y-camera_y);
+	return &sprite[pos];
+}
+
+inline void sprite_kill(struct Sprite *spr)
+{
+	// needs to spawn something ?	
+	const uint8_t spawn = sprtype[spr->type].spawn;
+	if (spawn != TRANSPARENT)
+		spawn_sprite(spawn,spr->x,spr->y);			
+	spr->type=TRANSPARENT; // remove
+}
+
 // load sprites from tilemap if onscreen, or unload them if offscreen
-void manage_sprites()
+void manage_sprites( void )
 {	
 	int modified=0;
 
@@ -391,36 +407,24 @@ void manage_sprites()
 	// load sprites
 	// TODO : scan only borders since center is normally done
 
-	int pos=0;
 	for (int j=-2;j<(240/16+2);j++)
 		for (int i=-2;i<(320/16+2);i++)
 		{
 			uint8_t *c = &data[TILEMAP_START+(camera_y/16+j)*256+camera_x/16+i];
 			for (int spt=0;spt<NB_SPRITETYPES;spt++)
 				if (*c==sprtype[spt].color && *c != TRANSPARENT) {
-
-					// find a proper empty place to pos
-					for (pos=0;sprite[pos].type!=TRANSPARENT;pos++);
+					struct Sprite *spr = spawn_sprite(spt, camera_x + i*16, camera_y + j*16);
 
 					// put where we found it in 
-					sprite[pos].x  = camera_x + i*16;
-					sprite[pos].y  = camera_y + j*16;
-					sprite[pos].tx = camera_x/16+i;
-					sprite[pos].ty = camera_y/16+j;
-					sprite[pos].type = spt;
-					sprite[pos].vx = 0;
-					sprite[pos].vy = 0;
-					sprite[pos].frame = 0;
-
-					sprite[pos].hflip=0; 
-
-					message ("starting sprite %d type %d tile %d @ %d,%d\n",pos,spt,*c,sprite[pos].x-camera_x,sprite[pos].y-camera_y);
-					modified=1;	
+					spr->tx = camera_x/16+i;
+					spr->ty = camera_y/16+j;
+					modified=1;	// will display sth on console
 					
 					*c=0; // replace tile color with sky1 // TODO replace with nearest empty
 					break;
 				}
 		}
+
 	if (modified) {	
 		message("now sprites :");
 		for (int i=0;i<MAX_SPRITES;i++)
@@ -430,6 +434,36 @@ void manage_sprites()
 		    	message("  ");
 		message("\n");
 	}
+}
+
+void sprite_collide_player(struct Sprite *spr)
+{	
+
+	struct SpriteType *spt = &sprtype[spr->type];
+
+	switch(spt->collision) { // TODO collide differently top / bottom / sides
+		case col_none : 
+			break;
+		
+		message("handling collision of type %d with player !\n", spt->collision);
+		case col_coin : 
+			// adds coin, small sfx + animations, remove
+			coins += 1;
+			sprite_kill(spr);
+
+		
+			break;
+
+		case col_kill : 
+			player_kill();
+			break;
+
+		default : 
+			message("unhandled collision type %d\n", spt->collision);
+			break;
+	}
+
+
 }
 
 // ---------------------------------------------------------------------------------------
@@ -486,6 +520,20 @@ void frame_die()
 
 }
 
+void play_frame()
+{
+	manage_sprites(); 
+	move_player(&sprite[0]);
+
+	for (int i=1;i<MAX_SPRITES;i++)
+		if (sprite[i].type != TRANSPARENT) {
+			sprite_move(&sprite[i]);
+			if (sprite_collide(&sprite[0], &sprite[i])) {
+				sprite_collide_player(&sprite[i]);
+			}
+		}
+}
+
 void game_frame()
 {
 	kbd_emulate_gamepad();
@@ -499,16 +547,7 @@ void game_frame()
 			break;
 
 		case FS_Interpreted : // game is started
-			manage_sprites(); 
-			move_player(&sprite[0]);
-
-			for (int i=1;i<MAX_SPRITES;i++)
-				if (sprite[i].type != TRANSPARENT) {
-					move_sprite(&sprite[i]);
-					if (sprite_collide(&sprite[0], &sprite[i])) {
-						sprite_collide_player(&sprite[i]);
-					}
-				}
+			play_frame();
 
 			break;
 

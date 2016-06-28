@@ -27,9 +27,11 @@ void interpret_spritetypes()
 	message("size sprtype:%d\n",sizeof(sprtype));
 	for (int id=0;id<NB_SPRITETYPES;id++) { // TODO 16 x 2columns
 		struct SpriteType *spt = &sprtype[id];
-		spt->color = get_property(4+id,0);
-		spt->movement = get_property(4+id,1);
+		spt->color     = get_property(4+id,0);
+		
+		spt->movement  = get_property(4+id,1);
 		spt->collision = get_property(4+id,2);
+		spt->spawn     = get_property(4+id,3); 
 
 		if (spt->color == TRANSPARENT) {			
 			message ("    spritetype %d undefined\n",id);
@@ -79,19 +81,16 @@ void interpret_spritetypes()
 			spt->h = 16*((15+spt->hity2)/16);
 
 		} else {			
-			// force to 1x1 full
-			message ("    spritetype %d in error \n",id);
+			// force to 16x16 full
 			spt->hitx1=0;
 			spt->hity1=0;
 			spt->hitx2=15;
 			spt->hity2=15;
 			spt->w = 16;
 			spt->h = 16;
-
-			continue;
 		}
 
-		message("sprtype %d - color %d move %d collision %d speed %d ",id,spt->color, spt->movement, spt->speed);
+		message("sprtype %d - color %d move %d collision %d spawns %d ",id,spt->color, spt->movement, spt->collision, spt->spawn);
 		message("x:%d y:%d w:%d h:%d ", spt->x, spt->y, spt->w, spt->h);
 		message("hitbox : (%d,%d)-(%d,%d)\n", spt->hitx1,spt->hity1,spt->hitx2,spt->hity2);
 		/*

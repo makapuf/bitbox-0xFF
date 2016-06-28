@@ -14,23 +14,7 @@
 #define TRANSPARENT 230 
 #define HITBOX_COLOR 25
 #define MAX_SPRITES 32 // max onscreen, can be many more per level
-#define NB_SPRITETYPES 16 // 2x16
-
-// minimap is a special 16x16 tile on the lower left corner. 
-/* each pixel the 4 first lines show each level properties.
-
-first pixel is the type of map. 0 is side view, 255 (white) is top view.
-blue (#7) square is first level
-
- */
-
-/* the 4 tiles after represent objects properties after 
-- first pixel is the color on the map
-- 
- 
-  */
-// the color representing the position of the minimap is the transparent color.
-// the rest is a depiction of terrains. just color them with colors after 48 (ie after the 4th line in color palette)
+#define NB_SPRITETYPES 16 // 2x16 for whole game
 
 
 // Types -
@@ -55,7 +39,7 @@ enum TerrainColors {
 	terrain_start=255, // only one, replaced by its above value
 };
 
-// special tiles 0-f -> 200->215 ? 
+// versa tiles : use their tileID. special features defined in the type of terrain
 
 enum TileIDs {
 	tile_empty=0,
@@ -113,7 +97,8 @@ enum spritetype_movement {
 	mov_alternate4 = 103, // (purple) no move, just cycling 4 frames each 16 frames	
 
 	mov_throbbing = 25,  // (bright green) static going up and down one pixel (to be better seen). 1 frame.
-	mov_singleanim=107,  // (grey) 4 frames animation then destroy sprite
+	mov_singleanim4=107,  // (grey) 4 frames animation then destroy sprite
+	mov_singleanim2=75,  // (blueish grey) 2 frames animation then destroy sprite
 
 	mov_flybounce = 11, // flies but bounces on walls. state : current speed vector
 
@@ -143,14 +128,13 @@ enum sprite_collide {
 	col_block = terrain_obstacle, // blocks the player - can throw it from edges...
 
 	col_coin = 249, // yellow, gives a coin - or N=next , 50 of them gives a life
-	col_life = 25,  // green, gives a life
+	col_life = 25,  // green, gives a life and disappear with explosion animation
 	col_key  = 137, // gives a key
-	
 
-	col_spawn, // creates a new object (inplace) - type is next pixel
-	col_span2, // spawns two identical elements
+	col_spawn_next_repeat, // creates a new object (inplace) every 30 frames 
+						   // type of object defined just after
 	
-	// col_superX
+	// col_bulletX // activates bullet X
 
 
 };
@@ -160,9 +144,10 @@ struct SpriteType {
 	uint8_t color; // TRANSPARENT if undefined
 	uint8_t movement;
 	uint8_t collision; // type of collision - sprite_collide
+	uint8_t spawn; // type of sprite spawned
 	uint8_t speed; // speed as byte-vector (zero is 119).
-	
-	uint8_t pad[5];
+
+	uint8_t pad[3];
 
 	// interpreted
 	uint8_t x,y,w,h; 
@@ -174,21 +159,6 @@ struct SpriteType {
 // bg tiles type for SIDE view
 /*
 --> plusieurs confs ensuite : rich BG, ...
-
-
- background :
-   normal(1)
-   alt(1) - terrain ?
-
- decors :
-   cloud&co (decors non-touching ground, UP) : H:3, 1x1 A/B (alternate) : 5
-   		inverser pour down ??
-
-   bush (ie touching obstacle down):H(3)- for 2-6 H,V(2),1(1 or repeated >7), nxn (4) 10
-
- alt-bg : pas de gravité sur les alt bg !
-   1xN vertical : ladder
-   alt-bg : NxN
 
  obstacle :
    tubes V2xN(4) , V1xN(2), H1xN(3), ground MxM(3x3 + 1 alt center)
@@ -281,6 +251,10 @@ void interpret_spritetypes();
 
 uint8_t get_terrain(const uint8_t tile_id);
 void player_kill();
+uint8_t collision_tile(const struct Sprite *spr);
+void sprite_move(struct Sprite *spr);
+void manage_sprites();
+uint8_t terrain_at(int x, int y);
 
 
 /*
