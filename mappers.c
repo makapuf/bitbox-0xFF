@@ -188,7 +188,7 @@ void interpret_terrains()
 	// ajouter en variables les variations random ?
 	int w,h;
 
-	inspect_mem(data + TILEMAP_START,20);
+	// inspect_mem(data + TILEMAP_START,20);
 
 	// analyze all tilemaps as terrains and replace them with tile ids
 	for (int y=4*16;y<15*16;y++)
