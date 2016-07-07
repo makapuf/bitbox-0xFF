@@ -9,7 +9,7 @@
 #define TITLE_HEIGHT 128
 #define LEVEL_HEIGHT 256
 
-#define TILEMAP_START (4*16*256)
+#define TILEMAP_START (4*16*256) // TODO REMOVE ME not needed
 
 #define TRANSPARENT 230 
 #define HITBOX_COLOR 25
@@ -21,28 +21,26 @@
 // -----------------------------------
 
 /* interpret pixel colors as terrains - terrains are >64 */
+// TODO : make terrains testable by bits ?? by %8 ? 
 enum TerrainColors {
 	terrain_empty=87, // empty
-	terrain_alt =181, // alt empty
-
 	terrain_animated_empty=86, // 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
 	terrain_obstacle=104, 
-	terrain_obstacle2=72, 
-
-	terrain_decor=159, // clouds, bushes, flowers...
-	terrain_decor2=95, 
-
 	terrain_kill=240, // lava, spikes ...
-
 	terrain_ladder = 147,
 	terrain_ice = 151, 
 	terrain_platform = 136, // cannot fall but can go through up or sideways
 
 	terrain_start=255, // only one, replaced by its above value
+	
+	// used with mappers only
+	terrain_alt =181, // alt empty
+	terrain_decor=159, // clouds, bushes, flowers...
+	terrain_decor2=95, 
+	terrain_obstacle2=72, 
 };
 
-// versa tiles : use their tileID. special features defined in the type of terrain
-
+// black mapper tile_id
 enum TileIDs {
 	tile_empty=0,
 

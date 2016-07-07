@@ -135,6 +135,7 @@ void move_player(struct Sprite *spr)
 	}
 
 	// can move vertically / horizontally ? if not, revert (independently)
+
 	// TODO : bigger sprites than 2x2
 	// TODO : not out of level
 
@@ -368,7 +369,7 @@ void sprite_move(struct Sprite *spr)
 		// gravity based ---------------
 		case mov_walk : 
 			spr->frame = (vga_frame/16)%2; // alternate 2 frames
-			if (spr->vx==0) { // start
+			if (spr->vx==0) { // start -> TODO move to spawn (or even make it oop)
 				// drop to floor
 				while (terrain_at(spr->x+spt->hitx1, spr->y+spt->hity2+1)==terrain_empty) 
 					spr->y++; 
@@ -427,7 +428,7 @@ void manage_sprites( void )
 {	
 	int modified=0;
 
-	// first unload sprites ( put them back on stage ? )
+	// first unload offline sprites ( put them back on stage ? )
 	for (int i=1;i<MAX_SPRITES;i++) {
 		if (sprite[i].type == TRANSPARENT ) continue;
 		else if (sprite[i].x - camera_x + sprtype[sprite[i].type].w < -32 || sprite[i].x-camera_x > VGA_H_PIXELS+32) {
@@ -438,12 +439,12 @@ void manage_sprites( void )
 	}
 
 	// load sprites
-	// TODO : scan only borders since center is normally done
+	// TODO : scan only borders after initial scan of visible screen since center is normally done
 
 	for (int j=-2;j<(240/16+2);j++)
 		for (int i=-2;i<(320/16+2);i++)
 		{
-			uint8_t *c = &data[TILEMAP_START+(camera_y/16+j)*256+camera_x/16+i];
+			uint8_t *c = &data[TILEMAP_START+(camera_y/16+j)*256+camera_x/16+i]; // tile id
 			for (int spt=0;spt<NB_SPRITETYPES;spt++)
 				if (*c==sprtype[spt].color && *c != TRANSPARENT) {
 					struct Sprite *spr = spawn_sprite(spt, camera_x + i*16, camera_y + j*16);
@@ -485,8 +486,6 @@ void animate_tilemap(void) {
 			}
 		}
 	}
-	printf ("\n");
-
 }
 
 void sprite_collide_player(struct Sprite *spr)
