@@ -36,6 +36,7 @@ enum TerrainColors {
 
 	terrain_ladder = 147,
 	terrain_ice = 151, 
+	terrain_platform = 136, // cannot fall but can go through up or sideways
 
 	terrain_start=255, // only one, replaced by its above value
 };
@@ -59,7 +60,7 @@ enum TileIDs {
 	tile_altground=3*16+6,
 	tile_pipe1=16,
 	tile_pipe2=17, // vertical  pipe width 2
-	tile_pipe1h=3*16, // horizontal pipe
+	tile_pipe1h=3*16, // horizontal pipe TODO  : make it a platform
 	tile_obstacle_unique=7+3*16,
 
 	tile_water=8+3*16,

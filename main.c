@@ -76,8 +76,20 @@ inline uint8_t terrain_at(int x, int y)
 inline int can_move_hori(uint8_t terrain) {
 	return !(terrain == terrain_ice || terrain == terrain_obstacle);
 }
-inline int can_move_verti(uint8_t terrain) {
+
+inline int can_move_up(uint8_t terrain) {
 	return !(terrain == terrain_ladder || terrain == terrain_ice || terrain == terrain_obstacle);
+}
+
+inline int can_move_down(uint8_t terrain) {
+	return !(terrain == terrain_ladder || terrain == terrain_ice || terrain == terrain_obstacle);
+}
+
+inline int is_walkable(uint8_t terrain) {
+	return terrain == terrain_obstacle || 
+		   terrain == terrain_ice || 
+		   terrain == terrain_ladder || 
+		   terrain == terrain_platform;
 }
 
 void move_player(struct Sprite *spr)
@@ -85,8 +97,13 @@ void move_player(struct Sprite *spr)
 	kbd_emulate_gamepad();
 
 	struct SpriteType *spt = &sprtype[spr->type];
-	int on_ground = terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_obstacle || 
-		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_obstacle;
+
+	// FIXME : make terrains bit-testable ? 
+	int on_ground = \
+	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_obstacle || 
+		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_obstacle ||
+	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_platform || 
+		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_platform;
 
 	// -- movement 
 	if (vga_frame%4==0) { // not on ice 
@@ -120,32 +137,48 @@ void move_player(struct Sprite *spr)
 	// can move vertically / horizontally ? if not, revert (independently)
 	// TODO : bigger sprites than 2x2
 	// TODO : not out of level
-	
+
+	// test moving horizontally 	
 	if (terrain_at(
 			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
 			spr->y + spt->hity1
-		)!=terrain_obstacle  &&
+		) != terrain_obstacle  &&
 		terrain_at(
 			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
 			spr->y+spt->hity2
-			) !=terrain_obstacle
+			) != terrain_obstacle
 		) {
 		spr->x += spr->vx;
 	} else {
 		spr->vx /= 2;
 	}
 
-	// differenciate up and down 
-	if (terrain_at(
-			spr->x+spt->hitx1,
-			spr->y+spr->vy + (spr->vy>0?spt->hity2:spt->hity1)
-		)!=terrain_obstacle && terrain_at(
-			spr->x+spt->hitx2,
-			spr->y+spr->vy + (spr->vy>0?spt->hity2:spt->hity1)
-			)!= terrain_obstacle ) {
-		spr->y += spr->vy;
+	if (spr->vy >0 ) {
+		// would touch down ? obstacle or platform (also uses hity2)
+		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity2 );
+		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity2 );
+
+		if (  t_left!=terrain_obstacle && 
+			  t_right != terrain_obstacle && 
+
+			  t_left!=terrain_platform && 
+			  t_right != terrain_platform 
+			  ) 
+		{
+			spr->y += spr->vy;
+		} else {
+			spr->vy /= 2;
+		}
 	} else {
-		spr->vy /= 2;
+		// would touch up ? - obstacle only , uses hity1
+		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity1 );
+		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity1 );
+
+		if (t_left!=terrain_obstacle && t_right != terrain_obstacle) {
+			spr->y += spr->vy;
+		} else {
+			spr->vy /= 2;
+		}
 	}
 
 
@@ -340,16 +373,16 @@ void sprite_move(struct Sprite *spr)
 				while (terrain_at(spr->x+spt->hitx1, spr->y+spt->hity2+1)==terrain_empty) 
 					spr->y++; 
 				spr->vx=1; // start going right
-			} else if (terrain_at(
+			} else if ( // reverse if obstacle or over a hole
+				is_walkable ( terrain_at(
 					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1),
 					spr->y+spt->hity2
-					)!=terrain_empty || 
-				terrain_at(
+					)) || 
+				!is_walkable( terrain_at(
 					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1), 
-					spr->y+spt->hity2+1
-					)==terrain_empty
+					spr->y+spt->hity2+1)
 				) 
-			{
+			) {
 				spr->vx = -spr->vx;
 			}
 
