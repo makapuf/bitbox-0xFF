@@ -436,6 +436,26 @@ void manage_sprites( void )
 	}
 }
 
+
+void animate_tilemap(void) {
+	// process 1/16th of screen vertically each frame (or maybe just 1/16th of tiles if bigger screen)
+	uint8_t tile_line = vga_frame%16; // tile line to process == 0-15 (assumes VGA_V_PIXELS <= 256 )
+
+	// all tiles horizontally : 320/16 = 20 tiles
+	for (int i=0;i<VGA_H_PIXELS/16;i++) {	
+		uint8_t *c = &data[TILEMAP_START+(camera_y/16+tile_line)*256+camera_x/16+i];
+		if (get_terrain(*c)==terrain_animated_empty) {
+			if (*c%4!=3) {
+				*c +=1 ;
+			} else {
+				*c -= 3;
+			}
+		}
+	}
+	printf ("\n");
+
+}
+
 void sprite_collide_player(struct Sprite *spr)
 {	
 
@@ -524,6 +544,7 @@ void play_frame()
 {
 	manage_sprites(); 
 	move_player(&sprite[0]);
+	animate_tilemap();
 
 	for (int i=1;i<MAX_SPRITES;i++)
 		if (sprite[i].type != TRANSPARENT) {

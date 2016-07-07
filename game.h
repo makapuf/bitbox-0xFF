@@ -25,6 +25,7 @@ enum TerrainColors {
 	terrain_empty=87, // empty
 	terrain_alt =181, // alt empty
 
+	terrain_animated_empty=86, // 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
 	terrain_obstacle=104, 
 	terrain_obstacle2=72, 
 
