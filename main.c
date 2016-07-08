@@ -421,9 +421,7 @@ void sprite_move(struct Sprite *spr)
 			if (vga_frame%8==0) {
 				spr->frame++;
 				if (spr->frame == 4) {
-					spr->type=TRANSPARENT;
-					spr->y=65536;
-					// kill spawn ?
+					sprite_kill(spr);
 				}
 			}
 			break;
@@ -433,9 +431,7 @@ void sprite_move(struct Sprite *spr)
 			if (vga_frame%8==0) {
 				spr->frame++;
 				if (spr->frame == 2) {
-					spr->type=TRANSPARENT;
-					spr->y=65536;
-					// kill spawn ?
+					sprite_kill(spr);
 				}
 			}
 			break;
@@ -516,6 +512,7 @@ inline void sprite_kill(struct Sprite *spr)
 	if (spawn != TRANSPARENT)
 		spawn_sprite(spawn,spr->x,spr->y);			
 	spr->type=TRANSPARENT; // remove
+	spr->y=65536;
 }
 
 // load sprites from tilemap if onscreen, or unload them if offscreen
