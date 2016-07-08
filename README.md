@@ -2,14 +2,14 @@
 
 # 0xFF : use paint to make games.
 
-Having a mini DIY game console to play games on is very cool and makinf games on it with nothing but your C compiler is a great feeling. However, I found that some players would like to create games on it but lack the know-how (or the patience) of setting up a build chain, learn C, gdb, the bitbox SDK and game dev (while all very simple steps if you know the majority of them, having to go through all of them at once is a little daunting)... So I wanted to made a project to let people be creative and start making some simple games quickly, while : 
+Having a mini DIY game console to play games on is very cool and making games on it with nothing but your C compiler is a great feeling. However, I found that some players would like to create games on it but lack the know-how (or the patience) of setting up a build chain, learn C, gdb, the bitbox SDK and game dev (while all very simple steps if you know the majority of them, having to go through all of them at once is a little daunting)... So I wanted to made a project to let people be creative and start making some simple games quickly, while : 
 
  - Requiring few if no programming to start doing something
  - Ability to customize and edit the game mostly graphically / visually
  - Being compatible with many tools (ie not needing special uncommon tooling).
  - Be simple to modify a game, transmit it and play it !
 
-0xFF is a project I created to cover this. The idea is to create a side-platformer/shooter/.. game engine using a single 256x256 8bpp image as game data (hence the name, since 0xFF is 255 in hexadecimal and all data in the game can be expressed as a number between 0 and 255), which is able to run on a PC, a Bitbox console (loading from microSD) as well as a micro bitbox (embedding several games in the internal flash).
+0xFF is a project I created to cover this. The idea is to create a side-platformer/shooter/.. game engine using a single 256x256 8bpp image as game data (hence the name, since 0xFF is 255 in hexadecimal and all data in those games can be expressed as a number between 0 and 255 : colors, positions x and y, tiles, ...), which is able to run on a PC, a Bitbox console (loading from microSD) as well as a micro bitbox (embedding several games in the internal flash).
 
 The kind of games we're talking about here are [tile-based games](https://en.wikipedia.org/wiki/Tile-based_video_game).
 
@@ -60,8 +60,6 @@ Main area
 ==========
 
 This main area (as opposed to the optional title zone defined afterwards) is a 256x256 pixels image, made of 16x16 squares of of 256 values pixels.
-
-
 
 The 16x16 squares will be called tiles. There are 256 of them, 16 lines of 16 tiles. We will count them from 0 (top left) to 255 or 0xff in hex (bottom right).
 
@@ -203,10 +201,121 @@ A pattern is 16 steps like a mini piano roll
 Whole songs can be specified by level. A song references a list of patterns by its pixel to tile mapping. A tile on the right of the pixel can be used to define a 
 
 # Reference
-### positions
+
+### levels 
+
+
+
+### object types
+
+position | property | comment 
+--------- | --------- | -------
+0 | color | color to prepresent object on tilemap. TRANSPARENT if this object type is undefined
+1 | movement | type of movement (see object movements)
+2 | collision | type of collision - sprite_collide (see object collisions table)
+3 | spawn | type of sprite spawned when this object dies
+4..7 | reserved | leave transparent.
+
+
 ### terrains
+
+name | terrain_id | description
+------| -------| -----
+terrain_empty | 87 | empty
+terrain_animated_empty | 86 | 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
+terrain_obstacle | 104 | blocks user fro left or right  
+terrain_kill | 240 | kills when touch it 
+terrain_ladder | 147 | can go up, down even with gravity
+terrain_ice | 151 | cannot stop on X, but can jump 
+terrain_platform | 136 | cannot fall but can go through up or sideways
+
+
 ### object movements
+
+title | color id | comment 
+----------- | --------- | ----------------------
+mov_nomove | TRANSPARENT | static, by example gives a bonus once touched. 1 frame
+mov_alternate1 | 7 | (bright blue) no move, just alternating 2 frames each 16 frames
+mov_alternate2 | 39 | (bright blue) no move, just alternating 2 frames each 32 frames
+mov_alternate3 | 71 | (bright blue) no move, just ping-ponging 3 frames (ABCBA ..) each 16 frames	
+mov_alternate4 | 103 | (purple) no move, just cycling 4 frames each 16 frames	
+mov_throbbing | 25 | (bright green) static going up and down one pixel (to be better seen). 1 frame.
+mov_singleanim4 | 7 | (grey) 4 frames animation then destroy sprite
+mov_singleanim2 | 75 | (blueish grey) 2 frames animation then destroy sprite
+mov_flybounce | 11 | flies but bounces on walls. state : current speed vector
+mov_walk | 3 | subject to gravity, walks and reverse direction if obstacle or holes. 2 frames
+mov_walkfall | 4 | subject to gravity, left and right if obstacle, falls if hole. 2 frames
+mov_leftrightjump | 5 | jumps from time to time. 2 frames 
+mov_sticky | 6 | walks on borders of blocking sprites, will go around edges cw. 2frames
+mov_vsine4 | 7 | vertical sine, 4 tiles height. 2frames.
+mov_bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
+mov_bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
+mov_bulletD | 10 | flies, not stopped by blocks, no gravity, goes down. 2frames
+mov_bulletLv2 | 11 | flies, a bit faster than preceding
+mov_bulletRv2 | 12 | flies, a bit faster than preceding
+mov_generator | 224 | does not move, generates each ~2 seconds enemy with id just after this one. 2fr 
+mov_ladder | 15 | stays on ladders. right to left, go back to right if finds border. 1 frame alternating
+mov_player | 255 | (white) implied for first object (??)
+
 ### object collisions
-### black mapper terrains
+
+
+collision type | color id | comment
+------ | ------ | ------
+col_none | TRANSPARENT | no collision
+col_kill | terrain_kill == 240 | red, kills player instantly
+col_block | terrain_obstacle | blocks the player - can push it
+col_coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
+col_life | 25 | green, gives a life and disappear with explosion animation
+col_key |  137 | gives a key
+
+
+### Black mapper terrains / tiles
+
+#### Terrain types 
+
+New terrain types defined : standard terrains, plus definitions of ALTs Id (allowing two neighbour blocks to be defined independently ) 
+
+terrain_name | color_id | comment
+----|-----|-------
+terrain_alt  | 181 |  alt empty
+terrain_decor | 159 | clouds, bushes, flowers...
+terrain_decor2 | 95 | alt decor
+terrain_obstacle2 | 72 | alt obstacle terrain. allows defining zones better
+
+#### Tiles definition
+
+those define the tile_id defined with black mapper (as well as how they behave)
+
+tile name | tile id | comment
+----|-----|------
+tile_empty | 0 | sky
+----|-----|------
+tile_cloud | 1 | cloud 1x1
+tile_altcloud | 2 | alt cloud 1x1 
+tile_longcloud | 3 | cloud Nx1
+----|-----|------
+tile_decor_one | 9 | decor 1x1
+tile_decor |  =7+2*16 | 
+tile_decor_h | 6 | 
+tile_decor_v | 9+16 | 
+tile_decor_under | 10 | 
+----|-----|------
+tile_ground | 2*16+4 | 
+tile_altground | 3*16+6 | 
+----|-----|------
+tile_pipe1 | 16 | 
+tile_pipe2 | 17 |  // vertical  pipe width 2
+tile_pipe1h | 3*16 |  // horizontal pipe 
+tile_obstacle_unique | 7+3*16 | 
+----|-----|------
+tile_water | 8+3*16 | 
+tile_kill_one | 11+2*16 | 
+tile_kill_over | 10+1*16 | 
+tile_kill_under | 10+2*16 | 
+tile_altbg | = 11 | 
+tile_ladder |  11+16 | 
+
+
 
 
