@@ -88,7 +88,7 @@ struct Sprite {
 enum spritetype_movement {
 	// standard 
 	mov_player = 255, // (white) implied for first object
-	mov_nomove = TRANSPARENT , // static, by example gives a bonus once touched. 1 frame
+	mov_nomove = TRANSPARENT , // static, no animation. 1 frame.
 	mov_alternate1 = 7,  // (bright blue) no move, just alternating 2 frames each 16 frames
 	mov_alternate2 = 39, // (bright blue) no move, just alternating 2 frames each 32 frames
 	mov_alternate3 = 71, // (bright blue) no move, just ping-ponging 3 frames (ABCBA ..) each 16 frames	
@@ -153,62 +153,6 @@ struct SpriteType {
 }; 
 
 
-
-// bg tiles type for SIDE view
-/*
---> plusieurs confs ensuite : rich BG, ...
-
- obstacle :
-   tubes V2xN(4) , V1xN(2), H1xN(3), ground MxM(3x3 + 1 alt center)
-   unbreakable space
-   ground (3: 1 pour contact avec air, )
-
- platforms :
-   1x1 : 1
-   horizontal : 3
-
- special blocks(1x1) : animated (all, 2 frames) -: 32 blocks
- - generating bullets 1/2 (2types)
- - interrupt (on+off)
- - switchable (by inter)
- - killing (2x2 frames each : au contact de l'air, 1 au contact terrain-up+dn)
- - auto jump up 2frames
- - door : -3keys open/closed
- - cassable si super + cassé
- - surprise / incassable (=surprise finie)
- - incassable (=? deja cassé=1x1 terrain)
-
-
- bonus : terrain diffrent mais même tile ? + tile alt/bg (pour secrets)
- - bonus super (off : given)
- - key+1 (+ taken)
- - life +1
- - +1 piece / off (suprise)
-
- - bloc start autowalk/glisse ? <-- non, level
-
-mode autoscroll : peut casser des trucs qu'on peut pas sinon ! des blocs
-   bump up / left / right
-terrains : 12 types + 2 bg + 1 decor + 1 obstacles  : 16!
-
-HUD :
- - lifes, super, 0-9, piece : 16 en 4x4 : 4 tiles
-
-MODES :
- - platformer avec gravite (avec ou sans saut .. )
- - super=lance trucs, super=glisse & casse, etoile mario
- - autoscroll avec gravite run & gun
- - autoscroll sans gravite (shhmup)
- - lemmings-like (touche pas ennemies (ou si:) , enn. meurent tt seuls, sautent, casse qq briques & c tt, aller ds porte ... )
- - jumper simple / avec tir
- - alterego ! avec scroll ?
-
-WORLD :
-    chains N blocs de 16x16
-	alterner : monde1-1, 2-1,3-1,4-1..N-1 puis 1-2 2-2 3-2 ...
-
-*/
-
 // variables -
 // -----------------------------------
 
@@ -216,7 +160,7 @@ extern void (*frame_handler)( void ); // pointer to frame handler.
 
 extern uint8_t tile2terrain[256]; // fast lookup of tile_id to terrain type id.
 
-extern uint8_t data[256*256];
+extern uint8_t data[256*256]; 
 extern uint8_t level_color; // color of pixels in minimap
 
 extern int player_x, player_y; // position inside whole map (data seen as a 256x256 tilemap. 
@@ -244,27 +188,3 @@ void sprite_move(struct Sprite *spr);
 void manage_sprites();
 uint8_t terrain_at(int x, int y);
 
-
-/*
-	step1 : modify graphics
-
-	open in grahical editor (ex : gimp, photoshop)
-	set grid size to 16, work in indexed palette (set, uncheck remove .. ) - never change palette
-	a tile will be 16x16 so 16x8 for the title (fixed) and 16x16 for the game
-
-	structure of the grid :
-	- main title 8x16 tiles
-	- sprites
-	- BG tiles
-	- 4 levels
-	- sounds
-
-
-    step1 : modify graphics
-	step2 : modify levels
-	step3 : modify gameplay
-	step5 : modify music
-	step4 : modify sheet structure
-	step5 : multilevels
-
-*/
