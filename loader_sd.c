@@ -88,12 +88,10 @@ void scan_files()
 
 
 /* fills global variables headers */
-void load_bmp(const char *filename)
+int  load_bmp(const char *filename)
 {
 	int res;
 	unsigned long nb;
-
-	game_state = FS_Nothing;
 
 	// make full path
 	strcpy(full_path,ROOT_DIR);
@@ -104,13 +102,13 @@ void load_bmp(const char *filename)
 	res=f_open (&file,full_path, FA_READ);
 	if (res!=FR_OK){
 		message("could not open file %s : error %x \n",filename,res);
-		return;
+		return res;
 	}
 
 	res=f_read (&file, &file_header,sizeof(file_header),&nb);
 	if (res!=FR_OK){
 		message("could not read file %s : error %x \n",filename,res);
-		return;
+		return res;
 	}
 
 	message("File header : %c%c %d %d\n", file_header.type[0],file_header.type[1],file_header.size,file_header.offbits);
@@ -118,7 +116,7 @@ void load_bmp(const char *filename)
 	res=f_read (&file, &img_header,sizeof(img_header),&nb);
 	if (res!=FR_OK){
 		message("could not read file %s : error %x \n",filename,res);
-		return;
+		return res;
 	}
 
 	message("Image header : %d B. %dx%d planes:%d  bpp:%d compr:%d imgsize:%d colors used:%d\n",
@@ -126,7 +124,8 @@ void load_bmp(const char *filename)
 		img_header.planes, img_header.bitcount,
 		img_header.compression, img_header.sizeimage, img_header.clrused
 		);
-	game_state=FS_Header;
+
+	return 0;
 }
 
 /* load N lines of pixels to data from file, reversing data lines.
@@ -138,35 +137,31 @@ static int load_pixels(int nblines, uint8_t *data)
 		unsigned long n;
 		f_read (&file, &data[y*IMAGE_WIDTH],IMAGE_WIDTH,&n);
 		if (n<IMAGE_WIDTH)
-			return 0;
+			return 250;
 		// xxx check n?
 	}
-	return 1; // OK
+	return 0; // OK
 }
 
-void load_title(uint8_t *data)
+// 1=OK, 0=error
+int load_title(uint8_t *data)
 {
-	if (game_state != FS_Header) return;
-
 	// XXX assert game_state=1,2 or 3, skip if 2 ?
 	f_lseek (&file,file_header.offbits + (LEVEL_HEIGHT) * img_header.width );
-	if (load_pixels(TITLE_HEIGHT, data))
-		game_state = FS_Title;
+	return load_pixels(TITLE_HEIGHT, data);
 }
 
-void load_level(uint8_t *data)
+// 1=OK, 0=error (?)
+int load_level(uint8_t *data)
 {
 	// XXX asserts loaded data
 	// last line
 	f_lseek (&file,file_header.offbits);
-
-	if (load_pixels(LEVEL_HEIGHT, data))
-		game_state = FS_Level;
+	return load_pixels(LEVEL_HEIGHT, data);
 }
 
 
 void close_file()
 {
 	f_close(&file);
-	game_state=FS_Nothing;
 }

@@ -146,18 +146,21 @@ void screen_line8(void)
 
 }
 
+// used to detect if we need to draw title (intro ?)
+extern void frame_title (void);
+extern void frame_error (void);
+
 void graph_frame(void) {}
 void graph_line8()
 {
 	// vga_odd ?
 	if (vga_odd) return;
 
-	if (game_state==FS_Title)
+	if (frame_handler == frame_title)
 		title_line8();
- 	else if (game_state==FS_Interpreted || game_state==FS_Die)
-		screen_line8();
-	else {
+ 	else if (frame_handler== frame_error) 
 		// dark blue
 		memset(draw_buffer,RGB8(0,0,70),VGA_H_PIXELS);
-	}
+	else 
+		screen_line8();
 }

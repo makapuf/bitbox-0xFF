@@ -341,7 +341,6 @@ void interpret_terrains()
 
 	}
 
-	game_state = FS_Interpreted;
 }
 
 

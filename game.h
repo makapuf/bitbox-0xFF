@@ -211,20 +211,10 @@ WORLD :
 
 */
 
-enum GameState {
-	FS_Nothing, // nothing read, file closed
-	FS_Header, // header only
-	FS_Title, // title data
-	FS_Level, // level raw data
-	FS_Interpreted, // interpreted level data
-	FS_Die, // dying animation
-};
-
-
 // variables -
 // -----------------------------------
 
-extern enum GameState game_state; // what is currently in data memory ?
+extern void (*frame_handler)( void ); // pointer to frame handler.
 
 extern uint8_t tile2terrain[256]; // fast lookup of tile_id to terrain type id.
 
@@ -241,9 +231,9 @@ extern int lives, coins, level, keys;
 // functions -
 // -----------------------------------
 
-void load_bmp(const char *filename); // --> init + load_next (cycle tt seul)
-void load_title(uint8_t *data);
-void load_level(uint8_t *data);
+int load_bmp(const char *filename); // --> init + load_next (cycle tt seul)
+int load_title(uint8_t *data);
+int load_level(uint8_t *data);
 int sine(uint8_t phi);
 
 void interpret_terrains();

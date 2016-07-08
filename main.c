@@ -25,9 +25,11 @@ int camera_x, camera_y; // vertical position of the title/scroll
 struct Sprite sprite[MAX_SPRITES];
 struct SpriteType sprtype[NB_SPRITETYPES]; 
 
-
-enum GameState game_state;
-
+void (*frame_handler)( void );
+void frame_die  (void);
+void frame_play (void);
+void frame_title(void);
+void frame_error(void);
 
 
 void reset_sprites()
@@ -522,8 +524,10 @@ void sprite_collide_player(struct Sprite *spr)
 
 void game_init(void)
 {
-	load_bmp("level0.bmp");
-	load_title(data);
+	if (load_bmp("level0.bmp") || load_title(data)) {
+		frame_handler = frame_error;
+		return;
+	}
 	
 	// todo : to start play
 	lives= 5;
@@ -531,25 +535,32 @@ void game_init(void)
 	// todo : enter title
 	
 	camera_x=(VGA_H_PIXELS-256)/2;
-	camera_y=40;
-
+	camera_y=40; 
+	
+	frame_handler = frame_title;
 }
 
 void reset_level() 
 {
-	load_level(data); 
-	reset_sprites();
+	if (load_level(data)) {
+		frame_handler = frame_error;
+		return;
+	}
 	interpret_spritetypes();
 	interpret_terrains();
 	camera_x=0;camera_y=0; // avoid being negative
 
 	vga_frame=0;
 	coins=0;
+
+	frame_handler = frame_play;
+
 }
 
 void player_kill()
 {
-	game_state = FS_Die;
+	frame_handler = frame_die;
+
 	sprite[0].vy = -6;
 	vga_frame=0;
 	// TODO check if lives >= 0 !
@@ -572,7 +583,7 @@ void frame_die()
 
 }
 
-void play_frame()
+void frame_play()
 {
 	manage_sprites(); 
 	move_player(&sprite[0]);
@@ -587,28 +598,24 @@ void play_frame()
 		}
 }
 
+void frame_title()
+{
+	// move sprites from level 0
+	if (GAMEPAD_PRESSED(0, start)) {
+		// XXX start fade transition  ... level ...
+		reset_level();
+	}
+}
+
+
+void frame_error()
+{
+}
+
 void game_frame()
 {
 	kbd_emulate_gamepad();
-	switch(game_state)
-	{
-		case FS_Title :
-			if (GAMEPAD_PRESSED(0, start)) {
-				// XXX start fade transition  ... level ...
-				reset_level();
-			}
-			break;
 
-		case FS_Interpreted : // game is started
-			play_frame();
+	frame_handler(); 
 
-			break;
-
-		case FS_Die : // die ! animation then reset level
-			frame_die();
-
-
-		default:
-			break;
-	}
 }
