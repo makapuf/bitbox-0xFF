@@ -250,6 +250,88 @@ void move_camera(void)
 
 
 
+// --Sprites 
+
+
+void interpret_spritetypes()
+{	
+	message("size sprtype:%d\n",sizeof(sprtype));
+	for (int id=0;id<NB_SPRITETYPES;id++) { // TODO 16 x 2columns
+		struct SpriteType *spt = &sprtype[id];
+		spt->color     = get_property(4+id,0);
+		
+		spt->movement  = get_property(4+id,1);
+		spt->collision = get_property(4+id,2);
+		spt->spawn     = get_property(4+id,3); 
+
+		if (spt->color == TRANSPARENT) {			
+			message ("    spritetype %d undefined\n",id);
+			continue;
+		}
+
+		// compute first frame position
+		spt->x = (spt->color%16)*16;
+		spt->y = (spt->color/16)*16;
+
+		// compute size / hitbox if not already known before - else copy
+		// scan first tile horizontally. first hitbox pixel must be in tile
+		int found=0;
+		for (spt->hitx1=0;spt->hitx1<16;spt->hitx1++) {
+			if (data[spt->y*256+spt->x+spt->hitx1]==HITBOX_COLOR) {
+				data[spt->y*256+spt->x+spt->hitx1] = TRANSPARENT; // TODO copy symmetric Y pixel
+				found=1;
+				break; 
+			}
+		}
+
+		for (spt->hity1=1;spt->hity1<16;spt->hity1++) {
+			if (data[(spt->y+spt->hity1)*256+spt->x]==HITBOX_COLOR) {
+				data[(spt->y+spt->hity1)*256+spt->x] = TRANSPARENT;
+				break; 
+			}	
+		}
+		// if found, hitbox y1 is necessarily >0
+		if (found) {
+			// now find x2
+			for (spt->hitx2=spt->hitx1+1;spt->hitx2<=255;spt->hitx2++) {
+				if (data[spt->y*256+spt->x+spt->hitx2] == HITBOX_COLOR) {
+					data[spt->y*256+spt->x+spt->hitx2] = TRANSPARENT;
+					break;
+				}
+			}
+			// now find y2
+			for (spt->hity2=spt->hity1+1;spt->hity2<=255;spt->hity2++) {
+				if (data[(spt->y+spt->hity2)*256+spt->x] == HITBOX_COLOR) {
+					data[(spt->y+spt->hity2)*256+spt->x] = TRANSPARENT;
+					break;
+				}
+			}
+			
+			// infer w and h of sprite (as integral number of tiles)
+			spt->w = 16*((15+spt->hitx2)/16);
+			spt->h = 16*((15+spt->hity2)/16);
+
+		} else {			
+			// force to 16x16 full
+			spt->hitx1=0;
+			spt->hity1=0;
+			spt->hitx2=15;
+			spt->hity2=15;
+			spt->w = 16;
+			spt->h = 16;
+		}
+
+		message("sprtype %d - color %d move %d collision %d spawns %d ",id,spt->color, spt->movement, spt->collision, spt->spawn);
+		message("x:%d y:%d w:%d h:%d ", spt->x, spt->y, spt->w, spt->h);
+		message("hitbox : (%d,%d)-(%d,%d)\n", spt->hitx1,spt->hity1,spt->hitx2,spt->hity2);
+		/*
+		for (int y=0;y<spt->h;y++) {
+			for (int x=0;x<spt->w;x++)
+				message("%d ",data[(spt->y+y)*256+spt->x+x]);
+			message("\n");
+		}
+		*/
+	}
 }
 
 

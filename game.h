@@ -188,3 +188,12 @@ void sprite_move(struct Sprite *spr);
 void manage_sprites();
 uint8_t terrain_at(int x, int y);
 
+// inlines 
+// ----------------------------------
+
+// get property id (0-7) from object id (to sprite_type)
+// objects 0-4 are levels ! 
+inline uint8_t get_property(const int object_id, const int property) 
+{
+	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
+}
