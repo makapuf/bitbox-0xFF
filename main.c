@@ -39,9 +39,11 @@ void reset_sprites()
 		sprite[i].y=65536;
 	}
 
-	// TODO remove me
+void player_reset()
+{
+	// TODO real start of level ! 
 	sprite[0].x=0;
-	sprite[0].y=100;
+	sprite[0].y=150+4*256;
 	sprite[0].frame=0;
 	sprite[0].type =0;
 }
@@ -71,7 +73,7 @@ int sine(uint8_t phi)
 // get the terrain type located at pixel in level position x,y
 inline uint8_t terrain_at(int x, int y)
 {
-	return get_terrain(data[TILEMAP_START+y/16*256+x/16]);
+	return get_terrain(data[y/16*256+x/16]);
 }
 
 
@@ -210,14 +212,6 @@ void move_player(struct Sprite *spr)
 	else if (spr->vx<0) 
 		spr->hflip=1;
 
-	// -- follow camera
-
-	if (spr->x > camera_x + 200 ) camera_x = spr->x-200;
-	if (spr->x < camera_x + 100 && spr->x>100 ) camera_x = spr->x-100;
-
-	if (spr->y > camera_y + 150 ) camera_y = spr->y-150;
-	if (spr->y < camera_y + 50  && spr->y>50) camera_y = spr->y-50;
-
 	uint8_t terrain = collision_tile(spr);
 
 	if (terrain==terrain_kill) 
@@ -237,6 +231,23 @@ void move_player(struct Sprite *spr)
 		}
 		message ("\n");
 	}
+}
+
+
+void move_camera(void)
+{
+	const struct Sprite *spr = &sprite[0];
+
+	// TODO : check level limits
+
+	if (spr->x > camera_x + 200 ) camera_x = spr->x-200;
+	if (spr->x < camera_x + 100 ) camera_x = spr->x>100 ? spr->x-100 : 0;
+
+	if (spr->y > camera_y + 150 ) camera_y = spr->y-150;
+	if (spr->y < camera_y + 50  && spr->y>50) camera_y = spr->y-50;
+
+}
+
 
 
 }
@@ -446,10 +457,10 @@ void manage_sprites( void )
 	for (int j=-2;j<(240/16+2);j++)
 		for (int i=-2;i<(320/16+2);i++)
 		{
-			uint8_t *c = &data[TILEMAP_START+(camera_y/16+j)*256+camera_x/16+i]; // tile id
+			uint8_t *c = &data[(camera_y/16+j)*256+camera_x/16+i]; // tile id
 			for (int spt=0;spt<NB_SPRITETYPES;spt++)
 				if (*c==sprtype[spt].color && *c != TRANSPARENT) {
-					struct Sprite *spr = spawn_sprite(spt, camera_x + i*16, camera_y + j*16);
+					struct Sprite *spr = spawn_sprite(spt, (camera_x/16)*16 + i*16, (camera_y/16)*16 + j*16);
 
 					// put where we found it in 
 					spr->tx = camera_x/16+i;
@@ -479,7 +490,7 @@ void animate_tilemap(void) {
 
 	// all tiles horizontally : 320/16 = 20 tiles
 	for (int i=0;i<VGA_H_PIXELS/16;i++) {	
-		uint8_t *c = &data[TILEMAP_START+(camera_y/16+tile_line)*256+camera_x/16+i];
+		uint8_t *c = &data[(camera_y/16+tile_line)*256+camera_x/16+i];
 		if (get_terrain(*c)==terrain_animated_empty) {
 			if (*c%4!=3) {
 				*c +=1 ;
@@ -546,9 +557,28 @@ void reset_level()
 		frame_handler = frame_error;
 		return;
 	}
+
+	sprites_reset();
+	player_reset();
 	interpret_spritetypes();
-	interpret_terrains();
-	camera_x=0;camera_y=0; // avoid being negative
+
+	// apply mapper just once
+	switch (data[255*256]) {
+		case 0 : 
+			black_mapper(); 
+			break;
+
+		case TRANSPARENT : 
+			// null mapper
+			break;
+
+		default: 
+			message("Unknown mapper ! ");
+			frame_handler = frame_error;
+			return;
+	}
+
+	move_camera(); // avoid being negative
 
 	vga_frame=0;
 	coins=0;
@@ -587,6 +617,7 @@ void frame_play()
 {
 	manage_sprites(); 
 	move_player(&sprite[0]);
+	move_camera();
 	animate_tilemap();
 
 	for (int i=1;i<MAX_SPRITES;i++)

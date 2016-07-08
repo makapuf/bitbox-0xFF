@@ -65,7 +65,7 @@ void screen_line8(void)
 
 	// start tile (clipped)	
 
-	tile_id = data[TILEMAP_START + (abs_y/16)*IMAGE_WIDTH + camera_x/16];
+	tile_id = data[(abs_y/16)*IMAGE_WIDTH + camera_x/16];
 	memcpy(draw8,
 		&data[(tile_id%16)*16 +  // tile column
 			  (tile_id/16)*16*IMAGE_WIDTH +  // tile line
@@ -80,7 +80,7 @@ void screen_line8(void)
 	// TODO : skip if no offset
 	for (int tile=-camera_x%16?1:0;tile<VGA_H_PIXELS/16+1;tile++) {
 		// read tilemap
-		tile_id = data[TILEMAP_START + (abs_y/16)*IMAGE_WIDTH + tile + camera_x/16];
+		tile_id = data[ (abs_y/16)*IMAGE_WIDTH + tile + camera_x/16];
 		memcpy(draw8+tile*16 - camera_x%16 ,
 		      &data[((tile_id/16)*16 + abs_y%16)*IMAGE_WIDTH +  // tile line + line ofs			 
 		      (tile_id%16)*16]  // tile column

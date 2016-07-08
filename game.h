@@ -9,8 +9,6 @@
 #define TITLE_HEIGHT 128
 #define LEVEL_HEIGHT 256
 
-#define TILEMAP_START (4*16*256) // TODO REMOVE ME not needed
-
 #define TRANSPARENT 230 
 #define HITBOX_COLOR 25
 #define MAX_SPRITES 32 // max onscreen, can be many more per level
