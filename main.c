@@ -31,13 +31,13 @@ void frame_play (void);
 void frame_title(void);
 void frame_error(void);
 
-
-void reset_sprites()
+void sprites_reset()
 {
 	for (int i=0;i<MAX_SPRITES;i++) {
 		sprite[i].type=TRANSPARENT;
 		sprite[i].y=65536;
 	}
+}
 
 void player_reset()
 {

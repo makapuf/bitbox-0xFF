@@ -73,7 +73,7 @@ enum TileIDs {
 
 struct SpriteType;
 struct Sprite {
-	int x,y; // pos 
+	int32_t  x,y; // pos 
 	int vx,vy; // speed
 	uint8_t hflip; // h flip. not always linked to vx
 
@@ -129,9 +129,7 @@ enum sprite_collide {
 	col_life = 25,  // green, gives a life and disappear with explosion animation
 	col_key  = 137, // gives a key
 
-	col_spawn_next_repeat, // creates a new object (inplace) every 30 frames 
-						   // type of object defined just after
-	
+
 	// col_bulletX // activates bullet X
 
 
@@ -143,9 +141,9 @@ struct SpriteType {
 	uint8_t movement;
 	uint8_t collision; // type of collision - sprite_collide
 	uint8_t spawn; // type of sprite spawned
-	uint8_t speed; // speed as byte-vector (zero is 119).
+	//uint8_t speed; // speed as byte-vector (zero is 119).
 
-	uint8_t pad[3];
+	uint8_t pad[4];
 
 	// interpreted
 	uint8_t x,y,w,h; 
