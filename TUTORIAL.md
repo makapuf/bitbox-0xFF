@@ -60,6 +60,8 @@ To define a level, first paint with the color to represent it (pick up one) on t
 
 So if you take color 0 (black) for the first level (set the first pixel of the tile on the right of the minimap to zero), and you painted the first row of the minimap black (color 0), you can draw the first level of your game on the first 16 tiles (00 to 0F) of your image.
 
+See the [reference to level descriptors](https://github.com/makapuf/bitbox-0xFF/blob/master/REFERENCE.md#levels).
+
 Tilemaps
 ========
 
@@ -109,6 +111,9 @@ In fact, the 4 first "objects" define the level-specific constants, and then the
 - position 2 is the player hit type (kills the player, gives a life ..)
 - position 3 is the objecttype id of the spawned sprite 0-25 (ie when this object is killed, spawn an object of this kind in place).
 
+See the [reference](https://github.com/makapuf/bitbox-0xFF/blob/master/REFERENCE.md#object-types) for complete documentation.
+
+
 # HUD
 The HUD is used to present to the user the current status : level of lives, score and keys. Letters are encoded as 8x8 minitiles (4 in a tile). They are specified as 5 tiles (20 minitiles) on the bottom of the image, see the examples.
 
@@ -148,6 +153,7 @@ The Black mapper can be used for side platformers. With this mapper, a few conve
 
 **The tileset** is fixed : 4 lines of 16x16 tiles are used, which allows for 64 tiles. Those tiles are separated between 48 fixed-function tiles (ie tiles which, given their position, have a precise usage) and 4x4 generic tiles (of which you can choose their behaviour).
 
+See the complete [reference of the Black Mapper](https://github.com/makapuf/bitbox-0xFF/blob/master/REFERENCE.md#black-mapper-terrains--tiles). 
 
 ***XXX explain tiles + structure***
 
