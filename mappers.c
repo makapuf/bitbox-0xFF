@@ -250,10 +250,7 @@ void black_mapper()
 					break;
 
 			}
-
-
 	}
-
 }
 
 

@@ -191,7 +191,7 @@ The 16 versatile tiles can have sky, kill or blocking behaviors, as well as many
 
 # Music and SFX
 
-Music will be encoded also as tiles. We will be using the chiptune engine of the bitbox but encoded as colors. The chiptune engine  is based on LFT as ported by @pulkomandy and mostly works with macros : instruments are macros to trigger voices oscillators and then patterns encode notes.
+Music will be encoded also as tiles. We will be using the chiptune engine of the bitbox but encoded as colors. The chiptune engine is based on LFT as ported by @pulkomandy and mostly works with macros : instruments are macros to trigger voices oscillators and then patterns encode notes.
 
 ###Instruments
 Your game will encode instruments in a tile, with 16 instruments of 16 macro steps. They will also serve as SFX definitions.
@@ -202,8 +202,43 @@ Whole songs can be specified by level. A song references a list of patterns by i
 
 # Reference
 
+Elements with no id are not implemented yet
+
 ### levels 
 
+position | property | comment
+---------|----------|---------
+0      | level color | color of the terrain on the minimap
+1-7    | reserved 
+      | control | see control types
+      | jumps   | see jump types
+      | physics | (gravity, maxspeed ) as a 2D vector pixel
+
+2D vector pixels are defined by a center +  a position in X and Y on the palette. 
+
+### control types
+
+name | id | description | buttons 
+-----|----|----------- | -----------
+LR   |    | standard   | can (optional) run on pressing B, optionally jump on pressing A, X fire
+LR hit |  | can hit enemies 
+LR runstomp | | can run, can stomp enemies forward by running (like hitting them)
+runner | | always goes right at average speed, can jump, average acceleration
+LR+aim | | can go left+right, aims by 45 degrees increments 
+beatemup | | can jump on ladders, falls back where we are
+
+
+### jump types
+
+name | id | description
+-----|----|-----------
+none | | cant jump
+simple |  | simple jumping
+simple+stomp | | can stomp enemies vetically by pressing down while jumping (hit them)
+double |  | double jump (stomps)
+triple |  | triple jump (stomps)
+double+wall | | double & wall jump
+double+wall+stomp | | can stomp objects 
 
 
 ### object types
@@ -214,21 +249,23 @@ position | property | comment
 1 | movement | type of movement (see object movements)
 2 | collision | type of collision - sprite_collide (see object collisions table)
 3 | spawn | type of sprite spawned when this object dies
-4..7 | reserved | leave transparent.
+4-7 | reserved | leave transparent.
+  | hit | what if player hits it - see collision table
 
 
 ### terrains
 
 name | terrain_id | description
 ------| -------| -----
-terrain_empty | 87 | empty
+terrain_empty | 87 | empty, does not interact with player
 terrain_animated_empty | 86 | 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
 terrain_obstacle | 104 | blocks user fro left or right  
 terrain_kill | 240 | kills when touch it 
 terrain_ladder | 147 | can go up, down even with gravity
 terrain_ice | 151 | cannot stop on X, but can jump 
 terrain_platform | 136 | cannot fall but can go through up or sideways
-
+terrain_start |   | start from here or restart / save point. Always go from left to right.
+terrain_jump |    | make the player automatically jump 
 
 ### object movements
 
@@ -247,7 +284,7 @@ mov_walk | 3 | subject to gravity, walks and reverse direction if obstacle or ho
 mov_walkfall | 4 | subject to gravity, left and right if obstacle, falls if hole. 2 frames
 mov_leftrightjump | 5 | jumps from time to time. 2 frames 
 mov_sticky | 6 | walks on borders of blocking sprites, will go around edges cw. 2frames
-mov_vsine4 | 7 | vertical sine, 4 tiles height. 2frames.
+mov_vsine4 | 7 | vertical sine, 4 tiles height. 2frames alternating every 16frames
 mov_bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
 mov_bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
 mov_bulletD | 10 | flies, not stopped by blocks, no gravity, goes down. 2frames
@@ -267,7 +304,13 @@ col_kill | terrain_kill == 240 | red, kills player instantly
 col_block | terrain_obstacle | blocks the player - can push it
 col_coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
 col_life | 25 | green, gives a life and disappear with explosion animation
-col_key |  137 | gives a key
+col_keyA |  137 | gives a key of type A
+col_keyB |   | gives a key of type B
+col_end | | ends level
+col_block_1keyA | | ends level if you've 1 key  of type A
+col_block_3keyA | | ends level if you've 3 keys of type A
+col_block_3keyB | | ends level if you've 3 keys of type B
+col_switch | | transform next object in list into its next object
 
 
 ### Black mapper terrains / tiles

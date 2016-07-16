@@ -14,8 +14,9 @@
 #define MAX_SPRITES 32 // max onscreen, can be many more per level
 #define NB_SPRITETYPES 16 // 2x16 for whole game
 
+#define START_LIVES 5
 
-// Types -
+// Types
 // -----------------------------------
 
 /* interpret pixel colors as terrains - terrains are >64 */
@@ -123,7 +124,7 @@ enum spritetype_movement {
 enum sprite_collide {
 	col_none = TRANSPARENT, // no collision
 	col_kill = terrain_kill, // 240 - red, kills player instantly
-	col_block = terrain_obstacle, // blocks the player - can throw it from edges...
+	col_block = terrain_obstacle, // blocks the player - can push him from edges...
 
 	col_coin = 249, // yellow, gives a coin - or N=next , 50 of them gives a life
 	col_life = 25,  // green, gives a life and disappear with explosion animation
@@ -151,7 +152,7 @@ struct SpriteType {
 }; 
 
 
-// variables -
+// variables
 // -----------------------------------
 
 extern void (*frame_handler)( void ); // pointer to frame handler.
@@ -168,7 +169,7 @@ extern struct Sprite sprite[MAX_SPRITES];
 
 extern int lives, coins, level, keys;
 
-// functions -
+// functions
 // -----------------------------------
 
 int load_bmp(const char *filename); // --> init + load_next (cycle tt seul)
@@ -176,7 +177,6 @@ int load_title(uint8_t *data);
 int load_level(uint8_t *data);
 int sine(uint8_t phi);
 
-void interpret_terrains();
 void interpret_spritetypes();
 
 uint8_t get_terrain(const uint8_t tile_id);
@@ -185,6 +185,10 @@ uint8_t collision_tile(const struct Sprite *spr);
 void sprite_move(struct Sprite *spr);
 void manage_sprites();
 uint8_t terrain_at(int x, int y);
+
+void black_mapper(void);
+
+void enter_title(void);
 
 // inlines 
 // ----------------------------------

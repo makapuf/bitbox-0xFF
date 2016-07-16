@@ -8,7 +8,6 @@
 void title_line8(void)
 {
 	// display title in the center of the screen (no clipping!)
-	// xxx wavy water effect ...
 	char *draw8 = (char*)draw_buffer;
 
 	if ((vga_line>=camera_y) && (vga_line<camera_y+TITLE_HEIGHT)) {
