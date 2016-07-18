@@ -49,7 +49,10 @@ position | property | comment
 2 | collision | type of collision - sprite_collide (see object collisions table)
 3 | spawn | type of sprite spawned when this object dies
 4-7 | reserved | leave transparent.
-  | hit | what if player hits it - see collision table
+  | collision_up | collision when player hits from bottom
+  | collision_dn | collision when player hits from bottom
+  | collision_side | collision when player hits from bottom
+  | hit | collision type if player hits/punches/stomp it (split into up/down/side?)
 
 
 ### terrains
@@ -110,13 +113,15 @@ col_block_1keyA | | ends level if you've 1 key  of type A
 col_block_3keyA | | ends level if you've 3 keys of type A
 col_block_3keyB | | ends level if you've 3 keys of type B
 col_switch | | transform next object in list into its next object
-
+col_stomped | | blocks if run into but destroyed if hit / stomped
+col_killjump | | kills player if hit from bottom or side, but stomps if jump on it (or 
+col_killhit | | kills the player when touched from any angle , can be killed if stomped or hit
 
 ### Black mapper terrains / tiles
 
 #### Terrain types 
 
-New terrain types defined : standard terrains, plus definitions of ALTs Id (allowing two neighbour blocks to be defined independently ) 
+New terrain types defined : standard terrains, plus definitions of ALTs Id (allowing two neighbour blocks to be defined independently with the same terrain type) ; also decors.
 
 terrain_name | color_id | comment
 ----|-----|-------
