@@ -56,7 +56,7 @@ else :
     raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
 
 for n,tile_id in enumerate(indices) : 
-	# XXX reserve data in minimap ? / check minimap
+	# XXX reserve data in minimap ? / check minimap for collisions
 	if tile_id > 0 : 
 		dest_pixels[n%256,n//256] = tile_id-1
 

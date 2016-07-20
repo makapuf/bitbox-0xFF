@@ -15,6 +15,7 @@ The kind of games we're talking about here are [tile-based games](https://en.wik
 
 This idea of a game encoded on an image is not mine, it originates from the [SIP](http://siegfriedcroes.com/sip/) (Single Image Platformer) idea by Siegfried Croes.
 
+## Further reading
 
 Let's see how a whole game can be coded in an image in 0xFF in the [Tutorial](TUTORIAL.md) , or check the [Reference](REFERENCE.md)
 
