@@ -3,6 +3,7 @@
 
 #include "game.h"
 #include "bitbox.h" // message
+#include "defs.h"
 
 int minstd_rand()
 {
@@ -80,13 +81,13 @@ uint8_t get_terrain(const uint8_t tile_id)
 		return data[(15*16+(tile_id/16))*256+tile_id%16]; // minimap values
 	else {
 		switch (tile_id) {
-			case terrain_obstacle2 : 
-				return terrain_obstacle;
+			case blk_terrain_obstacle2 : 
+				return blk_terrain_obstacle;
 				break;
-			case terrain_decor : 
-			case terrain_decor2 : 
-			case terrain_alt : 
-				return terrain_empty;
+			case blk_terrain_decor : 
+			case blk_terrain_decor2 : 
+			case blk_terrain_alt : 
+				return blk_terrain_empty;
 			default : 
 				return tile_id; // other values are the terrain itself.
 		}
@@ -113,140 +114,141 @@ void black_mapper()
 				continue;
 			}
 			switch(data[y*256+x]) {
-				case terrain_obstacle : 
-				case terrain_obstacle2 : 
+				case blk_terrain_obstacle : 
+				case blk_terrain_obstacle2 : 
 					search_rect_h(x,y,&w,&h);
 
 					message("obstacle %d,%d %dx%d\n",x,y,w,h);
 					
 					if (h==1) {        // horizontal pipe
 						if (w==1) {
-							data[y*256+x] = tile_obstacle_unique;
+							data[y*256+x] = blk_tile_obstacle_unique;
 						} else {
-							data[y*256+x] = tile_pipe1h;
+							data[y*256+x] = blk_tile_pipe1h;
 							for (int j=1;j<w-1;j++)
-								data[y*256+x+j] = tile_pipe1h+1;
-							data[y*256+x+w-1] = tile_pipe1h+2;
+								data[y*256+x+j] = blk_tile_pipe1h+1;
+							data[y*256+x+w-1] = blk_tile_pipe1h+2;
 						}
 					} else if (w==1) { // vertical width 1 pipe
-						data[y*256+x] = tile_pipe1;
+						data[y*256+x] = blk_tile_pipe1;
 						for (int j=1;j<h;j++)
-							data[(y+j)*256+x] = tile_pipe1+16;
+							data[(y+j)*256+x] = blk_tile_pipe1+16;
 
 					} else if (w==2) { // vertical pipe w2
-						data[y*256+x]  =tile_pipe2;
-						data[y*256+x+1]=tile_pipe2+1;
+						data[y*256+x]  =blk_tile_pipe2;
+						data[y*256+x+1]=blk_tile_pipe2+1;
 						for (int j=1;j<h;j++) {
-							data[(y+j)*256+x]   = tile_pipe2+16;
-							data[(y+j)*256+x+1] = tile_pipe2+16+1;
+							data[(y+j)*256+x]   = blk_tile_pipe2+16;
+							data[(y+j)*256+x+1] = blk_tile_pipe2+16+1;
 						}
 
 					} else { // mxn "square"
 						for (int j=1;j<h-1;j++) {
 							for (int i=1;i<w-1;i++)
-								data[x+i+(y+j)*256] = minstd_rand()&0xf0 ? tile_ground : tile_altground; 
+								data[x+i+(y+j)*256] = minstd_rand()&0xf0 ? blk_tile_ground : blk_tile_altground; 
 							// l/r borders
-							data[x+(y+j)*256]=tile_ground-1;
-							data[x+w-1+(y+j)*256]=tile_ground+1;
+							data[x+(y+j)*256]=blk_tile_ground-1;
+							data[x+w-1+(y+j)*256]=blk_tile_ground+1;
 						}
 						
 						for (int i=1;i<w-1;i++){
-							data[x+i+y*256]=tile_ground-16;
-							data[x+i+(y+h-1)*256]=tile_ground+16;
+							data[x+i+y*256]=blk_tile_ground-16;
+							data[x+i+(y+h-1)*256]=blk_tile_ground+16;
 						}
 
 						// corners
-						data[y*256+x]=tile_ground-16-1;
-						data[y*256+x+w-1]=tile_ground-16+1;
-						data[(y+h-1)*256+x]=tile_ground+16-1;
-						data[(y+h-1)*256+x+w-1]=tile_ground+16+1;
+						data[y*256+x]=blk_tile_ground-16-1;
+						data[y*256+x+w-1]=blk_tile_ground-16+1;
+						data[(y+h-1)*256+x]=blk_tile_ground+16-1;
+						data[(y+h-1)*256+x+w-1]=blk_tile_ground+16+1;
 
 					}
 					break;
 
-				case terrain_decor : 
-				case terrain_decor2 : 
+				case blk_terrain_decor : 
+				case blk_terrain_decor2 : 
 					search_rect_h(x,y,&w,&h);
 					message("decor %d,%d %dx%d\n",x,y,h,w);
 
 					if (get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
 						if (h==1) {
 							if (w==1) {
-								data[y*256+x]=tile_decor_one;
+								data[y*256+x]=blk_tile_decor_one;
 							} else {
-								data[y*256+x]=tile_decor_h;
-								data[y*256+x+w-1]=tile_decor_h+2;
-								for (int i=1;i<w-1;i++) data[y*256+x+i]=tile_decor_h+1;
+								data[y*256+x]=blk_tile_decor_h;
+								data[y*256+x+w-1]=blk_tile_decor_h+2;
+								for (int i=1;i<w-1;i++) data[y*256+x+i]=blk_tile_decor_h+1;
 							}
 						} else if (w==1) { // vertical decor (but not 1x1)
-							data[y*256+x] = tile_decor_v;
+							data[y*256+x] = blk_tile_decor_v;
 							for (int i=1;i<h;i++)
-								data[(y+i)*256+x] = tile_decor_v+16;
+								data[(y+i)*256+x] = blk_tile_decor_v+16;
 						} else { // mxn
 							for (int j=1;j<h;j++) {
 								for (int i=1;i<w-1;i++)
-									data[x+i+(y+j)*256] = tile_decor; 
+									data[x+i+(y+j)*256] = blk_tile_decor; 
 								// l/r borders
-								data[x+(y+j)*256]=tile_decor-1;
-								data[x+w-1+(y+j)*256]=tile_decor+1;
+								data[x+(y+j)*256]=blk_tile_decor-1;
+								data[x+w-1+(y+j)*256]=blk_tile_decor+1;
 							}
 							
 							for (int i=1;i<w-1;i++){
-								data[x+i+y*256]=tile_decor-16;
+								data[x+i+y*256]=blk_tile_decor-16;
 							}
 
 							// corners
-							data[y*256+x]=tile_decor-16-1;
-							data[y*256+x+w-1]=tile_decor-16+1;
+							data[y*256+x]=blk_tile_decor-16-1;
+							data[y*256+x+w-1]=blk_tile_decor-16+1;
 						}
 					} else if (get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over is blocking
-						data[y*256+x]=tile_decor_under;
+						data[y*256+x]=blk_tile_decor_under;
 					} else {
 						// whatever the height, we just process one 
 						if (w==1) {
-							data[y*256+x] = data[y*256+x]==terrain_decor ? tile_cloud : tile_altcloud;						
+							data[y*256+x] = data[y*256+x]==blk_terrain_decor ? blk_tile_cloud : blk_tile_altcloud;						
 						} else {
 							for (int j=1;j<w-1;j++)
-								data[y*256+x+j] = tile_longcloud+1;
-							data[y*256+x] = tile_longcloud;
-							data[y*256+x+w-1] = tile_longcloud+2;
+								data[y*256+x+j] = blk_tile_longcloud+1;
+							data[y*256+x] = blk_tile_longcloud;
+							data[y*256+x+w-1] = blk_tile_longcloud+2;
 						}
 					} 
 
 
 					break;
 
-				case terrain_kill : 
+				case blk_terrain_kill : 
 					search_rect_h(x,y,&w,&h);
 
 					message("kill %d,%d %dx%d\n",x,y,h,w);
 					if (w==1 && h==1) {
 						if (get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
-							data[y*256+x]=tile_kill_over;
+							data[y*256+x]=blk_tile_kill_over;
 						} else if (get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over
-							data[y*256+x]=tile_kill_under;
+							data[y*256+x]=blk_tile_kill_under;
 						} else {
-							data[y*256+x]=tile_kill_one;
+							data[y*256+x]=blk_tile_kill_one;
 						}
 					} else {
 						for (int i=0;i<w;i++) {
-							data[y*256+x+i]=tile_water+ (x+i)%2; // first layer
+							data[y*256+x+i]=blk_tile_water+ (x+i)%2; // first layer
 							for (int j=1;j<h;j++)
-								data[(y+j)*256+i+x]=tile_water+2; // under 
+								data[(y+j)*256+i+x]=blk_tile_water+2; // under 
 						}
 					}
 
 					break;
 
-				case terrain_empty : 
-					data[y*256+x]=tile_empty;
-					break;
-				case terrain_alt : 
-					data[y*256+x]=tile_altbg;
+				case blk_terrain_empty : 
+					data[y*256+x]=blk_tile_empty;
 					break;
 
-				case terrain_ladder : 
-					data[y*256+x]=tile_ladder;
+				case blk_terrain_alt : 
+					data[y*256+x]=blk_tile_altbg;
+					break;
+
+				case blk_terrain_ladder : 
+					data[y*256+x]=blk_tile_ladder;
 					break;
 
 			}

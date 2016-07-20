@@ -8,6 +8,7 @@
 #include "bitbox.h"
 
 #include "game.h"
+#include "defs.h"
 
 int lives;
 int coins;

@@ -10,9 +10,13 @@ USE_SDCARD = 1
 	
 include $(BITBOX)/lib/bitbox.mk
 
-main.c:game.h
+main.c:game.h defs.h
+defs.h: REFERENCE.md
+	./mk_defs.py REFERENCE.md > $@
 
 todo: main.c graph.c loader_sd.c
 	grep -n TODO $^
 
 .PHONY: todo 
+clean::
+	rm -f defs.h
