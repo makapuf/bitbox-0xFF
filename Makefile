@@ -7,10 +7,9 @@ GAME_C_FILES= main.c graph.c loader_sd.c mappers.c
 #USE_SAMPLER=1
 USE_SDCARD = 1
 # if not usesdcard, use loader_flash + make data
-	
+
 include $(BITBOX)/lib/bitbox.mk
 
-main.c:game.h defs.h
 defs.h: REFERENCE.md
 	./mk_defs.py REFERENCE.md > $@
 

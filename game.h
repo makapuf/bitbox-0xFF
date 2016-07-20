@@ -6,6 +6,11 @@
 
 #define IMAGE_WIDTH 256
 #define TITLE_HEIGHT 128
+
+// position of the title "level"
+#define TILE_TITLE_X 2 
+#define TILE_TITLE_Y 15
+
 #define LEVEL_HEIGHT 256
 
 #define TRANSPARENT 230 
@@ -14,6 +19,7 @@
 #define NB_SPRITETYPES 16 // 2x16 for whole game
 
 #define START_LIVES 5
+
 
 // Types
 // -----------------------------------
@@ -67,6 +73,15 @@ extern int lives, coins, level, keys;
 // Functions
 // -----------------------------------
 
+void frame_die  (void);
+void frame_play (void);
+void frame_title(void);
+void frame_logo (void);
+void frame_error(void);
+
+void enter_title(void);
+void enter_logo (void);
+
 int load_bmp(const char *filename); // --> init + load_next (cycle tt seul)
 int load_title(uint8_t *data);
 int load_level(uint8_t *data);
@@ -74,7 +89,6 @@ int sine(uint8_t phi);
 
 void interpret_spritetypes();
 
-uint8_t get_terrain(const uint8_t tile_id);
 void player_kill();
 uint8_t collision_tile(const struct Sprite *spr);
 void sprite_move(struct Sprite *spr);
@@ -83,7 +97,6 @@ uint8_t terrain_at(int x, int y);
 
 void black_mapper(void);
 
-void enter_title(void);
 
 // Inlines 
 // ----------------------------------
@@ -93,4 +106,9 @@ void enter_title(void);
 inline uint8_t get_property(const int object_id, const int property) 
 {
 	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
+}
+
+inline uint8_t get_terrain (const uint8_t tile_id)
+{
+	return data[(15*16+(tile_id/16))*256+tile_id%16]; // minimap values
 }

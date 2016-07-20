@@ -27,11 +27,6 @@ struct Sprite sprite[MAX_SPRITES];
 struct SpriteType sprtype[NB_SPRITETYPES]; 
 
 void (*frame_handler)( void );
-void frame_die  (void);
-void frame_play (void);
-void frame_title(void);
-void frame_error(void);
-
 
 void player_reset()
 {
@@ -638,7 +633,7 @@ void game_init(void)
 		return;
 	}
 		
-	enter_title();
+	enter_title(); // title in fact
 }
 
 
@@ -654,7 +649,8 @@ void reset_level()
 	interpret_spritetypes();
 
 	// apply mapper just once
-	switch (data[255*256]) {
+	uint8_t mapper = data[255*256];
+	switch (mapper) {
 		case 0 : 
 			black_mapper(); 
 			break;
@@ -704,7 +700,7 @@ void frame_die()
 		if (lives>0)
 			reset_level();
 		else 
-			enter_title(); // game over 
+			enter_logo(); // game over => title ?
 	}
 
 }
@@ -725,7 +721,7 @@ void frame_play()
 		}
 }
 
-void enter_title(void)
+void enter_logo(void)
 {
 	if (load_title(data)) { 
 		frame_handler=frame_error;
@@ -733,17 +729,54 @@ void enter_title(void)
 	}
 	camera_x=(VGA_H_PIXELS-256)/2;
 	camera_y=40; 
+	frame_handler = frame_logo;
+}
+
+void frame_logo()
+{
+	// move sprites from level 0
+	if (GAMEPAD_PRESSED(0, start)) {
+		// fade ...
+		enter_title();
+	}
+}
+
+void enter_title(void)
+{
+	if (load_level(data)) { 
+		frame_handler=frame_error;
+		return;
+	}
+
 	frame_handler = frame_title;
+
+	manage_sprites(); // once
+
 }
 
 void frame_title()
 {
+	static uint16_t gamepad_oldstate = gamepad_start;
+
 	// move sprites from level 0
-	if (GAMEPAD_PRESSED(0, start)) {
+	if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_start) { 
 		// XXX start fade transition  ... level ...
 		lives = START_LIVES;
 		reset_level();
 	}
+
+	// kinda like animate_tilemap only simpler
+	uint8_t tile_line = vga_frame%16; // tile line to process == 0-15
+	if (tile_line<8) {	
+		for (int i=0;i<16;i++) { // process one line each frame.
+			uint8_t *c = &data[(TILE_TITLE_Y*16+tile_line)*256+TILE_TITLE_X*16+i];
+			if (get_terrain(*c)==terrain_animated_empty) {
+				*c += (*c%4!=3) ? 1 : -3;
+			}
+		}
+	}
+
+	gamepad_oldstate = gamepad_buttons[0];
 }
 
 

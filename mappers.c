@@ -75,7 +75,7 @@ void inspect_mem (void *ptr, int len)
 
 
 // works for terrains AND tiles
-uint8_t get_terrain(const uint8_t tile_id) 
+static uint8_t mapper_get_terrain(const uint8_t tile_id) 
 {
 	if (tile_id<64) // this is a tile
 		return data[(15*16+(tile_id/16))*256+tile_id%16]; // minimap values
@@ -170,7 +170,7 @@ void black_mapper()
 					search_rect_h(x,y,&w,&h);
 					message("decor %d,%d %dx%d\n",x,y,h,w);
 
-					if (get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
+					if (mapper_get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
 						if (h==1) {
 							if (w==1) {
 								data[y*256+x]=blk_tile_decor_one;
@@ -200,7 +200,7 @@ void black_mapper()
 							data[y*256+x]=blk_tile_decor-16-1;
 							data[y*256+x+w-1]=blk_tile_decor-16+1;
 						}
-					} else if (get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over is blocking
+					} else if (mapper_get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over is blocking
 						data[y*256+x]=blk_tile_decor_under;
 					} else {
 						// whatever the height, we just process one 
@@ -222,9 +222,9 @@ void black_mapper()
 
 					message("kill %d,%d %dx%d\n",x,y,h,w);
 					if (w==1 && h==1) {
-						if (get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
+						if (mapper_get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
 							data[y*256+x]=blk_tile_kill_over;
-						} else if (get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over
+						} else if (mapper_get_terrain(data[(y-1)*256+x])==terrain_obstacle) { // over
 							data[y*256+x]=blk_tile_kill_under;
 						} else {
 							data[y*256+x]=blk_tile_kill_one;

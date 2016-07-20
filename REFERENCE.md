@@ -170,7 +170,7 @@ ground | 2*16+4 |
 altground | 3*16+6 | 
 pipe1 | 16 | 
 pipe2 | 17 |  vertical  pipe width 2
-pipe1h | 3*16 | horizontal pipe 
+pipe1h | 3*16 | horizontal pipe (a platform)
 obstacle_unique | 7+3*16 | 
 water | 8+3*16 | 
 kill_one | 11+2*16 | 

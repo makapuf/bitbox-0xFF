@@ -5,7 +5,7 @@
 #include "bitbox.h"
 #include "game.h"
 
-void title_line8(void)
+void logo_line8(void)
 {
 	// display title in the center of the screen (no clipping!)
 	char *draw8 = (char*)draw_buffer;
@@ -18,9 +18,7 @@ void title_line8(void)
 	} else if (vga_line>=camera_y+TITLE_HEIGHT && vga_line<=camera_y+3*TITLE_HEIGHT/2) {
 
 		int phi = (2*vga_frame+8*vga_line)%256;
-
 		int ofs = sine(phi);
-
 		ofs = ofs*((int)vga_line-camera_y-TITLE_HEIGHT)/(16*64); // scale
 
 		memcpy(
@@ -114,52 +112,111 @@ void screen_line8(void)
 
 	// TODO return sprites to position if out / killed
 
-	// HUD
-
+	// HUD - not in title level
 	if ((vga_line-8)<8) {
-		// lives
-		blit8(draw8, 256,8*8);
-		blit8(draw8, lives,9*8);
+			// lives
+			blit8(draw8, 256,8*8);
+			blit8(draw8, lives,9*8);
 
-		// level / world
-		blit8(draw8, 256+3,11*8);
-		blit8(draw8, 256+8,12*8);
-		blit8(draw8, 256+3,13*8);
-		blit8(draw8, level+1,14*8);
+			// level / world
+			blit8(draw8, 256+3,11*8);
+			blit8(draw8, 256+8,12*8);
+			blit8(draw8, 256+3,13*8);
+			blit8(draw8, level+1,14*8);
 
-		// time
-		blit8(draw8, 256+4,16*8);
-		blit8(draw8, vga_frame/6000,17*8);
-		blit8(draw8, (vga_frame/600)%10,18*8);
-		blit8(draw8, (vga_frame/60)%10,19*8);
+			// time
+			blit8(draw8, 256+4,16*8);
+			blit8(draw8, vga_frame/6000,17*8);
+			blit8(draw8, (vga_frame/600)%10,18*8);
+			blit8(draw8, (vga_frame/60)%10,19*8);
 
-		// keys
-		
-		// coins
-		blit8(draw8, 256+6,22*8);
-		blit8(draw8, coins/10,23*8);
-		blit8(draw8, coins%10,24*8);
+			// keys
+			
+			// coins
+			blit8(draw8, 256+6,22*8);
+			blit8(draw8, coins/10,23*8);
+			blit8(draw8, coins%10,24*8);
+		}
+}
+
+#define TITLE_OFS_Y 40
+#define TITLE_OFS_X 32
+
+static inline void draw_tiles_title(const int ofs, const int abs_y, const int darken) {
+	uint8_t tile_id;
+	uint8_t * restrict draw8 = (uint8_t*)draw_buffer;
 
 
+	for (int tile=0;tile<16;tile++) {
+		// read tilemap
+		tile_id = data[ (abs_y/16+TILE_TITLE_Y*16)*IMAGE_WIDTH + tile + TILE_TITLE_X*16];
+		memcpy(TITLE_OFS_X + draw8 + ofs +tile*16 ,
+		      &data[((tile_id/16)*16 + abs_y%16)*IMAGE_WIDTH +  // tile line + line ofs			 
+		      (tile_id%16)*16]  // tile column
+			  ,16);
 	}
+
+	// a bit darker
+	if (darken)
+		for (int i=ofs+TITLE_OFS_X;i<ofs+TITLE_OFS_X+16*16;i++)
+			draw8[i]&=0b01101011;
+
+	// l/r borders
+	for (int i=0;i<TITLE_OFS_X+ofs;i++)
+		draw8[i]=0;
+	for (int i=ofs+TITLE_OFS_X+16*16;i<VGA_H_PIXELS;i++)
+		draw8[i]=0;
 
 }
 
-// used to detect if we need to draw title (intro ?)
-extern void frame_title (void);
-extern void frame_error (void);
+void title_line8(void)
+{
+	int ofs, darken, abs_y;
 
+	// background draw only, with effects
+	if ((vga_line>=TITLE_OFS_Y) && (vga_line<TITLE_OFS_Y+TITLE_HEIGHT*3/2)) {
+		if (vga_line<TITLE_OFS_Y+TITLE_HEIGHT) {
+			ofs=0;
+			abs_y = vga_line-TITLE_OFS_Y;
+			darken=0;
+		} else {
+			int phi = (2*vga_frame+8*vga_line)%256;
+			ofs = sine(phi) * ((int)vga_line-TITLE_OFS_Y-TITLE_HEIGHT)/(16*64); 
+			abs_y = TITLE_HEIGHT-1-(int)(vga_line-TITLE_OFS_Y-TITLE_HEIGHT)*2;
+			darken=1;
+		}
+
+		// speedups if inlined and special cased
+		switch(ofs&3) {
+			case 0: draw_tiles_title(ofs,abs_y,darken); break;
+			case 1: draw_tiles_title(ofs,abs_y,darken); break;
+			case 2: draw_tiles_title(ofs,abs_y,darken); break;
+			case 3: draw_tiles_title(ofs,abs_y,darken); break;
+		}
+	} else {
+		memset(draw_buffer,0,VGA_H_PIXELS);
+	}
+}
+
+
+// used to detect if we need to draw title (intro ?)
 void graph_frame(void) {}
+
 void graph_line8()
 {
-	// vga_odd ?
-	if (vga_odd) return;
+	if (vga_odd) 
+		return;
 
-	if (frame_handler == frame_title)
-		title_line8();
- 	else if (frame_handler== frame_error) 
-		// dark blue
+	if (frame_handler==frame_logo) 
+		logo_line8();
+	else if (frame_handler==frame_error) 
 		memset(draw_buffer,RGB8(0,0,70),VGA_H_PIXELS);
-	else 
+	else if (frame_handler==frame_play || frame_handler==frame_die)
 		screen_line8();
+	else if (frame_handler==frame_title)
+		title_line8();
+	else {
+		message("!!! error unknown frame type \n");
+		die(8,4);
+	}
 }
