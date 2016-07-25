@@ -215,6 +215,8 @@ void graph_line8()
 		screen_line8();
 	else if (frame_handler==frame_title)
 		title_line8();
+	else if (frame_handler==0)
+		memset(draw_buffer,RGB8(70,0,70),VGA_H_PIXELS);		
 	else {
 		message("!!! error unknown frame type \n");
 		die(8,4);

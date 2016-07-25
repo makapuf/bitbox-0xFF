@@ -26,7 +26,7 @@ int camera_x, camera_y; // vertical position of the title/scroll
 struct Sprite sprite[MAX_SPRITES];
 struct SpriteType sprtype[NB_SPRITETYPES]; 
 
-void (*frame_handler)( void );
+void (*frame_handler)( void ); 
 
 void player_reset()
 {
@@ -628,6 +628,7 @@ void sprite_collide_player(struct Sprite *spr)
 
 void game_init(void)
 {
+	loader_init();
 	if (load_bmp("level0.bmp")) {
 		frame_handler = frame_error;
 		return;
@@ -700,7 +701,7 @@ void frame_die()
 		if (lives>0)
 			reset_level();
 		else 
-			enter_logo(); // game over => title ?
+			enter_title(); 
 	}
 
 }

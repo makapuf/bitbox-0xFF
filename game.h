@@ -82,7 +82,10 @@ void frame_error(void);
 void enter_title(void);
 void enter_logo (void);
 
-int load_bmp(const char *filename); // --> init + load_next (cycle tt seul)
+
+// loader
+int loader_init(); // init loader 
+int load_bmp(const char *filename); // --> init + load_next (cycle)
 int load_title(uint8_t *data);
 int load_level(uint8_t *data);
 int sine(uint8_t phi);

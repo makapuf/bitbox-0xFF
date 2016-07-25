@@ -33,6 +33,7 @@ struct __attribute__ ((packed)) BMPImgHeader {
 #define MAX_FILES 20
 #define ROOT_DIR "levels"
 
+static FATFS fs;
 static FIL file;
 
 static struct BMPFileHeader file_header;
@@ -49,6 +50,12 @@ static int cmp(const void *p1, const void *p2){
     return strcmp( (char * const ) p1, (char * const ) p2);
 }
 
+int loader_init()
+{
+	memset(&fs, 0, sizeof(FATFS));
+	return f_mount(&fs,"",1); // mount now
+	// open dir here ?
+}
 
 void scan_files()
 {
@@ -97,6 +104,8 @@ int  load_bmp(const char *filename)
 	strcpy(full_path,ROOT_DIR);
 	strcat(full_path,"/");
 	strcat(full_path,filename);
+
+	// mount drive
 
 
 	res=f_open (&file,full_path, FA_READ);
