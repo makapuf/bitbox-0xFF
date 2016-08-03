@@ -7,11 +7,11 @@ Elements with no id are not implemented yet.
 description of the level : each id is an index on the level description bytes
 
 level_pos | property(0-7) | comment
----------|----------|---------
-color | 0 | color of the terrain on the minimap
-control |  | see control types
-jumps |  | see jump types
-physics | | (gravity, maxspeed ) as a 2D vector pixel
+----------|----------|---------
+color     | 0 | color of the terrain on the minimap
+control   |   | see control types
+jumps     |   | see jump types
+physics   |   | (gravity, maxspeed ) as a 2D vector pixel. if gravity is zero, maxspeed also applies to vertical movement
 
 2D vector pixels are defined by a center +  a position in X and Y on the palette. 
 
@@ -37,7 +37,7 @@ jump | id | description
 -----|----|-----------
 none | 0 | cant jump
 simple | 1 | simple jumping
-simple+stomp | | can stomp enemies vetically by pressing down while jumping (hit them)
+simple+stomp | | can stomp enemies vertically by pressing down while jumping (hit them)
 double |  | double jump (stomps)
 triple |  | triple jump (stomps)
 double+wall | | double & wall jump
@@ -50,7 +50,7 @@ Indices in object type definition bytes.
 
  property | position | comment 
 --------- | --------- | -------
- color |0| color to prepresent object on tilemap. 230 (transparent) if this object type is undefined
+ color |0| color to prepresent object on tilemap, as well as id of the top left of the first tile for the sprite frames. 230 (transparent) if this object type is undefined
  movement |1| type of movement (see object movements)
  collision |2| type of collision - sprite_collide (see object collisions table)
  spawn | 3 | type of sprite spawned when this object dies
@@ -76,6 +76,8 @@ ice | 151 | cannot stop on X, but can jump
 platform | 136 | cannot fall but can go through up or sideways
 start |   | start from here or restart / save point. Always go from left to right.
 jump |    | make the player automatically jump 
+
+> You can also use any color defined as 
 
 > TODO : make terrains testable by bits ?? by %8 ? 
 
