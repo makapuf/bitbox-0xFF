@@ -123,10 +123,14 @@ Extras
 
 The title space is an optional 256x128 header on the top of your image, which will not be used at all during the game but can be used to present your game with a simple bitmap. you resulting game image will thus be 256x384 pixels.
 
-## Title level
-The title level is a tile just above the minimap, which will be used to define a simple 16x16 mini-level (using the same object types) which will be sued as a title if your game image is 256x256. Note that this level will not be playable, will have no scrolling and will just serve as illustration of your game.
+## Titles 
+The title level is defined by a tile just above the minimap, which will be used to define a simple 16x8 mini-level + 4 8x4 microlevels (using the same object types). 
 
-##Mappers
+ - The 16x8 will be used as a title for your game. 
+ Note that this level will not be playable, will have no scrolling and will just serve as illustration of your game.
+ - The 8x4 tiles will be presented as a 128x64 tilemap for the four level titles within your game.
+
+## Mappers
 
 Instead of having to remember and set every tile id individually, which can grow tiresome, you can use *mappers*. Mappers are a way to draw your tilemaps not using tile_ids, but terrains.
 
