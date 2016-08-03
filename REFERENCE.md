@@ -129,6 +129,7 @@ switch | | transform next object in list into its next object
 stomped | | blocks if run into but destroyed if hit / stomped
 killjump | | kills player if hit from bottom or side, but stomps if jump on it (or 
 killhit | | kills the player when touched from any angle , can be killed if stomped or hit
+restart | | the object dies once touched. the player will restart here once touched.
 
 ### Black Mapper Terrain types 
 
