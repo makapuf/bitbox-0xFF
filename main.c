@@ -8,9 +8,11 @@
 
 int lives;
 int coins;
-int level;
-int njumps; // current value
-uint8_t level_color; // color of pixels in minimap
+int level; // 0-3
+int njumps; // current value for double/triple jumps
+
+uint8_t level_color; // color of pixels in minimap for current level
+uint8_t level_x1,level_y1,level_x2,level_y2;
 
 uint8_t data[256*256];
 
@@ -284,14 +286,20 @@ void move_camera(void)
 {
 	const struct Sprite *spr = &sprite[0];
 
-	// TODO : check level limits
 
 	if (spr->x > camera_x + 200 ) camera_x = spr->x-200;
 	if (spr->x < camera_x + 100 ) camera_x = spr->x>100 ? spr->x-100 : 0;
 
 	if (spr->y > camera_y + 150 ) camera_y = spr->y-150;
-	if (spr->y < camera_y + 50  && spr->y>50) camera_y = spr->y-50;
+	if (spr->y < camera_y + 50  ) camera_y = spr->y-50;
 
+	// check level limits
+
+	if (camera_x<level_x1*256) camera_x=level_x1*256;
+	if (camera_y<level_y1*256) camera_y=level_y1*256;
+
+	if (camera_x>level_x2*256-VGA_H_PIXELS+256) camera_x=level_x2*256-VGA_H_PIXELS+256;
+	if (camera_y>level_y2*256-VGA_V_PIXELS+256) camera_y=level_y2*256-VGA_V_PIXELS+256;
 }
 
 
@@ -528,19 +536,77 @@ void sprite_move(struct Sprite *spr)
 
 // -- tilemap-related functions
 
+// scan tilemap, get boundaries , blanks level not part of our current level
 void interpret_level(int level)
 {
-	// scan tilemap and blanks level not part of our current level
+	
 
+	level_color=get_property(level,0);
+
+
+
+	// scan level enclosing rectangle in tiles
+	for (int x=0;x<16;x++) {
+		for (int y=0;y<16;y++)
+			// any one of the row is the level color ? ok this is the start
+			if (get_terrain(y*16+x)==level_color) {
+				level_x1=x;
+				goto getx2;
+			}
+	}
+
+	getx2:
+	for (int x=15;x>=level_x1;x--) {
+		for (int y=0;y<16;y++)
+			// any one of the row is the level color ? ok this is the end
+			if (get_terrain(y*16+x)==level_color) {
+				level_x2=x;
+				goto gety1;
+			}
+	}
+
+	gety1:
+	for (int y=0;y<16;y++) {
+		for (int x=0;x<16;x++)
+			// any one of the row is the level color ? ok this is the start
+			if (get_terrain(y*16+x)==level_color) {
+				level_y1=y;
+				goto gety2;
+			}
+	}
+	
+	gety2: 
+	for (int y=15;y>=level_y1;y--) {
+		for (int x=0;x<16;x++)
+			// any one of the row is the level color ? ok this is the end
+			if (get_terrain(y*16+x)==level_color) {
+				level_y2=y;
+				goto finished;
+			}
+	}
+
+	finished: 
+	message("Level found to be from %dx%d-%dx%d\n",level_x1,level_y1,level_x2,level_y2);
+
+	#if 0
 	// scans minimap for tiles not level but part of levels
-	const uint8_t l2=get_property(1,0);
-	const uint8_t l3=get_property(2,0);
-	const uint8_t l4=get_property(3,0);
-
 	for (int tid=0;tid<256;tid++) {
 		uint8_t c=get_terrain(tid);
+		// check if it's a terrain 
+		if ((c==get_property(0,0) ||  
+			 c==get_property(1,0) || 
+			 c==get_property(2,0) || 
+			 c==get_property(3,0)) && 
+			c!=level_color) {
+			// this is a tilemap not of this level 
+			for (int i=0;i<16;i++) // TODO grow from outside borders to center ? 
+				for (int j=0;j<16;j++) {
+					data[tid%16+i+(tid/16*16+j)*256]=0;
+				}
+		}
 
 	}
+	#endif 
 }
 
 // load sprites from tilemap if onscreen, or unload them if offscreen
@@ -652,14 +718,17 @@ void game_init(void)
 }
 
 
-void reset_game_data(int level) 
+void reset_game_data(int next_level) 
 {
 	// reload all data into RAM
-	if (load_level(data)) {
+	if (load_game_data(data)) {
 		frame_handler = frame_error;
 		return;
 	}
 	
+
+	next_level=level;
+
 	// scan level to find bounds and location of 2 starting points.
 
 	sprites_reset();
@@ -683,7 +752,7 @@ void reset_game_data(int level)
 			return;
 	}
 
-	interpret_level(); // interpret level after mapper
+	interpret_level(level); // interpret level after mapper
 
 	move_camera(); // avoid being negative
 
@@ -718,7 +787,7 @@ void frame_die()
 	if (vga_frame>=60*3) {
 
 		if (lives>0)
-			reset_level();
+			reset_game_data(level);
 		else 
 			enter_title(); 
 	}
@@ -741,6 +810,7 @@ void frame_play()
 		}
 }
 
+#if 0
 void enter_logo(void)
 {
 	if (load_title(data)) { 
@@ -760,6 +830,7 @@ void frame_logo()
 		enter_title();
 	}
 }
+#endif 
 
 void enter_title(void)
 {
@@ -782,7 +853,7 @@ void frame_title()
 	if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_start) { 
 		// XXX start fade transition  ... level ...
 		lives = START_LIVES;
-		reset_level();
+		reset_game_data(0);
 	}
 
 	// kinda like animate_tilemap only simpler

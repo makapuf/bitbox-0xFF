@@ -152,16 +152,8 @@ static int load_pixels(int nblines, uint8_t *data)
 	return 0; // OK
 }
 
-// 1=OK, 0=error
-int load_title(uint8_t *data)
-{
-	// XXX assert game_state=1,2 or 3, skip if 2 ?
-	f_lseek (&file,file_header.offbits + (LEVEL_HEIGHT) * img_header.width );
-	return load_pixels(TITLE_HEIGHT, data);
-}
-
 // 1=OK, 0=error (?)
-int load_level(uint8_t *data)
+int load_game_data(uint8_t *data)
 {
 	// XXX asserts loaded data
 	// last line
