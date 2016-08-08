@@ -18,7 +18,7 @@ inline uint8_t minimap(const int x,const int y)
 }
 
 
-
+#if 0
 // get biggest vertical rectangle possible as w,h from pos
 static void search_rect_v(int x, int y ,int *dw, int *dh)
 {
@@ -38,6 +38,7 @@ static void search_rect_v(int x, int y ,int *dw, int *dh)
 
 	*dw=w; *dh=h;
 }
+#endif 
 
 // get biggest horizontal rectangle possible as w,h from pos
 static void search_rect_h(int x, int y ,int *dw, int *dh)

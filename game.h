@@ -84,11 +84,10 @@ void enter_logo (void);
 
 
 // loader
-int loader_init(); // init loader 
-int load_bmp(const char *filename); // --> init + load_next (cycle)
-int load_title(uint8_t *data);
-int load_level(uint8_t *data);
-int sine(uint8_t phi);
+int loader_init (); // init loader 
+int load_bmp (const char *filename); // --> init + load_next (cycle)
+int load_game_data (uint8_t *data);
+int sine (uint8_t phi);
 
 void interpret_spritetypes();
 
@@ -111,6 +110,8 @@ inline uint8_t get_property(const int object_id, const int property)
 	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
 }
 
+
+// tile id to terrain (ie. read minimap)
 inline uint8_t get_terrain (const uint8_t tile_id)
 {
 	return data[(15*16+(tile_id/16))*256+tile_id%16]; // minimap values

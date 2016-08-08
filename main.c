@@ -1,7 +1,3 @@
-// BMP loader
-// loads a bmp file to data memory segment either title or data itself.
-// ignores the palette, so to hide all, replace with 0 palette !
-
 #include <stdint.h>
 #include <string.h>
 
@@ -14,10 +10,10 @@ int lives;
 int coins;
 int level;
 int njumps; // current value
+uint8_t level_color; // color of pixels in minimap
 
 uint8_t data[256*256];
 
-uint8_t level_color; // color of pixels in minimap
 
 int camera_x, camera_y; // vertical position of the title/scroll
 
@@ -62,7 +58,12 @@ int sine(uint8_t phi)
 // get the terrain type located at pixel in level position x,y
 inline uint8_t terrain_at(int x, int y)
 {
-	return get_terrain(data[y/16*256+x/16]);
+	//message("%d,%d %d==%d\n",x/256,x,get_terrain(y/256*16+x/256),level_color);
+	if (y<0 || x<0 || x>256*16 || y>256*16 || get_terrain(y/256*16+x/256)!=level_color) {
+		return terrain_obstacle; // off limits or is the tested tile not defined as level ? then blocks
+	}
+	const uint8_t tile_id = data[y/16*256+x/16]; // read tile_id from level
+	return get_terrain(tile_id);
 }
 
 
@@ -140,8 +141,6 @@ void move_player(struct Sprite *spr)
 	static uint16_t gamepad_oldstate=0;
 	const uint16_t gamepad_pressed = gamepad_buttons[0] & ~gamepad_oldstate;
 
-
-
 	struct SpriteType *spt = &sprtype[spr->type];
 
 	// FIXME : make terrains bit-testable ? 
@@ -168,10 +167,9 @@ void move_player(struct Sprite *spr)
 		}
 	}
 
-	// Jump - TODO dbl / wall jump 
+	// Jump - TODO double / triple / wall jump 
 	if (gamepad_pressed & gamepad_A ) {
 		if (on_ground) {
-
 			spr->vy = -6;
 		}
 	}
@@ -189,11 +187,11 @@ void move_player(struct Sprite *spr)
 	// TODO : not out of level
 
 	// test moving horizontally 	
-	if (terrain_at(
+	if (terrain_at( // test top collision
 			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
 			spr->y + spt->hity1
 		) != terrain_obstacle  &&
-		terrain_at(
+		terrain_at( // test bottom collision
 			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
 			spr->y+spt->hity2
 			) != terrain_obstacle
@@ -204,7 +202,8 @@ void move_player(struct Sprite *spr)
 	}
 
 	if (spr->vy >0 ) {
-		// would touch down ? obstacle or platform (also uses hity2)
+		// would touch down ? obstacle or platform (also uses hity2) 
+		// TODO player can hang within platform
 		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity2 );
 		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity2 );
 
@@ -527,7 +526,22 @@ void sprite_move(struct Sprite *spr)
 
 }
 
+// -- tilemap-related functions
 
+void interpret_level(int level)
+{
+	// scan tilemap and blanks level not part of our current level
+
+	// scans minimap for tiles not level but part of levels
+	const uint8_t l2=get_property(1,0);
+	const uint8_t l3=get_property(2,0);
+	const uint8_t l4=get_property(3,0);
+
+	for (int tid=0;tid<256;tid++) {
+		uint8_t c=get_terrain(tid);
+
+	}
+}
 
 // load sprites from tilemap if onscreen, or unload them if offscreen
 void manage_sprites( void )
@@ -638,12 +652,15 @@ void game_init(void)
 }
 
 
-void reset_level() 
+void reset_game_data(int level) 
 {
+	// reload all data into RAM
 	if (load_level(data)) {
 		frame_handler = frame_error;
 		return;
 	}
+	
+	// scan level to find bounds and location of 2 starting points.
 
 	sprites_reset();
 	player_reset();
@@ -665,6 +682,8 @@ void reset_level()
 			frame_handler = frame_error;
 			return;
 	}
+
+	interpret_level(); // interpret level after mapper
 
 	move_camera(); // avoid being negative
 
@@ -744,7 +763,7 @@ void frame_logo()
 
 void enter_title(void)
 {
-	if (load_level(data)) { 
+	if (load_game_data(data)) { 
 		frame_handler=frame_error;
 		return;
 	}

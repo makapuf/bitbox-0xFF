@@ -21,9 +21,9 @@ Player control type
 
 control | id | description / controls
 -----|----|----------------------
-LR   |  0  | standard  controls : can (optional) run on pressing B, optionally jump on pressing A, X fire
+LR   |  0  | standard controls : can (optional) run on pressing B, optionally jump on pressing A, X fire
 LR hit |  | can hit enemies 
-LR runstomp | | can run, can stomp enemies forward by running (like hitting them)
+LR runstomp | | can run, can stomp enemies forward by running (like hitting them) or by jumping on them+down
 runner | | always goes right at average speed, can jump, average acceleration
 LR+aim | | can go left+right, aims by 45 degrees increments 
 beatemup | | can jump on ladders, falls back where we are
@@ -171,9 +171,9 @@ decor_v | 9+16 |
 decor_under | 10 | 
 ground | 2*16+4 | 
 altground | 3*16+6 | 
-pipe1 | 16 | 
+pipe1 | 16 | vertical pipe width 1
 pipe2 | 17 |  vertical  pipe width 2
-pipe1h | 3*16 | horizontal pipe (a platform)
+pipe1h | 3*16 | horizontal pipe (acts as a platform)
 obstacle_unique | 7+3*16 | 
 water | 8+3*16 | 
 kill_one | 11+2*16 | 

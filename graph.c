@@ -5,6 +5,7 @@
 #include "bitbox.h"
 #include "game.h"
 
+#if 0
 void logo_line8(void)
 {
 	// display title in the center of the screen (no clipping!)
@@ -39,6 +40,7 @@ void logo_line8(void)
 		memset(draw_buffer,0,VGA_H_PIXELS);
 	}
 }
+#endif 
 
 static inline void blit8(char *draw8, const int chr, const int pos) 
 {
@@ -60,7 +62,7 @@ void screen_line8(void)
 
 	if (abs_y<0) return;
 
-	// start tile (clipped)	
+	// first tile (clipped)	
 
 	tile_id = data[(abs_y/16)*IMAGE_WIDTH + camera_x/16];
 	memcpy(draw8,
@@ -74,7 +76,7 @@ void screen_line8(void)
 
 
 	// TODO : check this tile of tilemap is inside level 
-	// TODO : skip if no offset
+	// TODO : skip up to end of super tile (16 tiles) and draw once
 	for (int tile=-camera_x%16?1:0;tile<VGA_H_PIXELS/16+1;tile++) {
 		// read tilemap
 		tile_id = data[ (abs_y/16)*IMAGE_WIDTH + tile + camera_x/16];
@@ -112,31 +114,31 @@ void screen_line8(void)
 
 	// TODO return sprites to position if out / killed
 
-	// HUD - not in title level
+	// HUD
 	if ((vga_line-8)<8) {
-			// lives
-			blit8(draw8, 256,8*8);
-			blit8(draw8, lives,9*8);
+		// lives
+		blit8(draw8, 256,8*8);
+		blit8(draw8, lives,9*8);
 
-			// level / world
-			blit8(draw8, 256+3,11*8);
-			blit8(draw8, 256+8,12*8);
-			blit8(draw8, 256+3,13*8);
-			blit8(draw8, level+1,14*8);
+		// level / world
+		blit8(draw8, 256+3,11*8);
+		blit8(draw8, 256+8,12*8);
+		blit8(draw8, 256+3,13*8);
+		blit8(draw8, level+1,14*8);
 
-			// time
-			blit8(draw8, 256+4,16*8);
-			blit8(draw8, vga_frame/6000,17*8);
-			blit8(draw8, (vga_frame/600)%10,18*8);
-			blit8(draw8, (vga_frame/60)%10,19*8);
+		// time
+		blit8(draw8, 256+4,16*8);
+		blit8(draw8, vga_frame/6000,17*8);
+		blit8(draw8, (vga_frame/600)%10,18*8);
+		blit8(draw8, (vga_frame/60)%10,19*8);
 
-			// keys
-			
-			// coins
-			blit8(draw8, 256+6,22*8);
-			blit8(draw8, coins/10,23*8);
-			blit8(draw8, coins%10,24*8);
-		}
+		// keys
+		
+		// coins
+		blit8(draw8, 256+6,22*8);
+		blit8(draw8, coins/10,23*8);
+		blit8(draw8, coins%10,24*8);
+	}
 }
 
 #define TITLE_OFS_Y 40
@@ -207,9 +209,12 @@ void graph_line8()
 	if (vga_odd) 
 		return;
 
+	#if 0
 	if (frame_handler==frame_logo) 
 		logo_line8();
-	else if (frame_handler==frame_error) 
+	else 
+	#endif 
+	if (frame_handler==frame_error) 
 		memset(draw_buffer,RGB8(0,0,70),VGA_H_PIXELS);
 	else if (frame_handler==frame_play || frame_handler==frame_die)
 		screen_line8();
