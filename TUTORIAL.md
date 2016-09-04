@@ -85,11 +85,15 @@ Those behaviours (solid, sky, ..) are called **terrains** .
 
 > This means that you cannot use those predefined *terrains colors* for your *levels colors* on your minimap. Life is though.
 
+> Note that 
 
 Now you can draw your first tiles and then compose them into tilemaps for your levels. 
 
 But we don't have any enemies and no way to tell how your level *plays*. Well, that'll be the next step with *object types* 
 
+In fact, to position objects on the map, you will paint their position on the tilemap with a pixel corresponding to their ObjectType color (see here after). 
+
+> And the player, where does it start ? Well, that's for the pixel on your level tilemap with *color 255/white*. If there is none, player will start at top left of your level.
 
 Object Types
 ============
@@ -105,8 +109,7 @@ In fact, the 4 first "objects" define the level-specific constants, and then the
 - position 2 defines the player speed (%16, horizontal pos on palette), and jump height (/16, Vspeed). 240 (bottom left of the palette) is no movement. 241 is speed 1 , no jump, is speed 0 (no move), only jump (which CAN be useful) ...
 
 ### Object-lines
-
-- pixel 0 encodes the position of the first frame of the animation of that sprite graphics on the image. 
+- pixel 0 encodes the position of the first frame of the animation of that sprite graphics on the image, and also its color on the tilemap.
 - position 1 is the movement type (it also defines the number of frames used for the movement animations)
 - position 2 is the player hit type (kills the player, gives a life ..)
 - position 3 is the objecttype id of the spawned sprite 0-25 (ie when this object is killed, spawn an object of this kind in place).

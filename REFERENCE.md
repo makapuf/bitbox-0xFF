@@ -21,12 +21,14 @@ Player control type
 
 control | id | description / controls
 -----|----|----------------------
-LR   |  0  | standard controls : can (optional) run on pressing B, optionally jump on pressing A, X fire
-LR hit |  | can hit enemies 
-LR runstomp | | can run, can stomp enemies forward by running (like hitting them) or by jumping on them+down
-runner | | always goes right at average speed, can jump, average acceleration
-LR+aim | | can go left+right, aims by 45 degrees increments 
+classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes weapon if several gained
+hit |  | left/right ; B: run ; Y : hits enemies (horizontally) : 1 more frame for hitting
+modern | | can double/wall jump, stomp vertically on enemies (like hitting them)
+runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
+runner | | always goes right at average speed, can jump, sometimes fire
+aim | | can go left+right, aims by 45 degrees increments 
 beatemup | | can jump on ladders, falls back where we are
+nojump | | restricted mode : cannot jump or run but can push objects
 
 
 ### jump types
@@ -44,23 +46,6 @@ double+wall | | double & wall jump
 double+wall+stomp | | can stomp objects 
 
 
-### Object Types
-
-Indices in object type definition bytes.
-
- property | position | comment 
---------- | --------- | -------
- color |0| color to prepresent object on tilemap, as well as id of the top left of the first tile for the sprite frames. 230 (transparent) if this object type is undefined
- movement |1| type of movement (see object movements)
- collision |2| type of collision - sprite_collide (see object collisions table)
- spawn | 3 | type of sprite spawned when this object dies
- reserved | 4-7 | leave transparent.
- collision_up | | collision when player hits from bottom
- collision_dn | | collision when player hits from bottom
- collision_side | | collision when player hits from bottom
- hit | | collision type if player hits/punches/stomp it (split into up/down/side?)
-
-
 ### Terrains
 
 Terrain types. ie how a terrain tile behaves.
@@ -74,12 +59,26 @@ kill | 240 | kills when touch it
 ladder | 147 | can go up, down even with gravity
 ice | 151 | cannot stop on X, but can jump 
 platform | 136 | cannot fall but can go through up or sideways
-start |   | start from here or restart / save point. Always go from left to right.
-jump |    | make the player automatically jump 
+jump |    | makes the player automatically jump 
 
-> You can also use any color defined as 
+> You can also use any color defined as an enemy color.
+> Remember that on tilemap, reference 255 is the level start (defaulting to top left if not found).
 
 > TODO : make terrains testable by bits ?? by %8 ? 
+
+### Object Types
+
+Indices in object type definition bytes. 8 colors defined max.
+
+ property | position | comment 
+--------- | --------- | -------
+ color |0| color to prepresent object on tilemap, as well as id of the top left of the first tile for the sprite frames. 230 (transparent) if this object type is undefined
+ movement |1| type of movement (see object movements)
+ collision |2| type of collision - sprite_collide (see object collisions table)
+ spawn | 3 | type of sprite spawned when this object dies
+ alt_collision | | alt collision type 
+ alt_collision_when | | condition where alt collision is triggered (never, top, bottom, all except top, all except bottom, when punched/kicked, when punched but only up or down ... )
+
 
 ### Movements
 
@@ -97,12 +96,12 @@ singleanim4 | 107 | (grey) 4 frames animation then destroy sprite
 singleanim2 | 75 | (blueish grey) 2 frames animation then destroy sprite
 flybounce | 11 | flies but bounces on walls. state : current speed vector
 walk | 3 | subject to gravity, walks and reverse direction if obstacle or holes. 2 frames
-walkfall |  | subject to gravity, left and right if obstacle, falls if hole. 2 frames
+bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
+bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
+walkfall |  | subject to gravity, left and right if obstacle, falls in holes. 2 frames
 leftrightjump |  | jumps from time to time. 2 frames 
 sticky |  | walks on borders of blocking sprites, will go around edges cw. 2frames
 vsine4 |  | vertical sine, 4 tiles height. 2frames alternating every 16frames
-bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
-bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
 bulletD |  | flies, not stopped by blocks, no gravity, goes down. 2frames
 bulletLv2 | 11 | flies, a bit faster than preceding
 bulletRv2 |  | flies, a bit faster than preceding
@@ -122,16 +121,15 @@ block | terrain_obstacle | blocks the player - can push it
 coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
 life | 25 | green, gives a life and disappear with explosion animation
 keyA |  137 | gives a key of type A
+end | 255| ends level
 keyB |   | gives a key of type B
-end | | ends level
 block_1keyA | | ends level if you've 1 key  of type A
 block_3keyA | | ends level if you've 3 keys of type A
 block_3keyB | | ends level if you've 3 keys of type B
-switch | | transform next object in list into its next object
-stomped | | blocks if run into but destroyed if hit / stomped
+switch | | transform next object in list into its next object (ex. if object in pos 3, objects 4 get transformed in objects 5 and reciprocally)
 killjump | | kills player if hit from bottom or side, but stomps if jump on it (or 
 killhit | | kills the player when touched from any angle , can be killed if stomped or hit
-restart | | the object dies once touched. the player will restart here once touched.
+restart | | the object dies once touched. the player will respawn here once touched.
 
 ### Black Mapper Terrain types 
 

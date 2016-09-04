@@ -75,13 +75,14 @@ extern int lives, coins, level, keys;
 
 void frame_die  (void);
 void frame_play (void);
+void frame_leveltitle(void);
 void frame_title(void);
 void frame_logo (void);
 void frame_error(void);
 
 void enter_title(void);
 void enter_logo (void);
-
+void enter_level(void);
 
 // loader
 int loader_init (); // init loader 

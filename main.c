@@ -13,6 +13,7 @@ int njumps; // current value for double/triple jumps
 
 uint8_t level_color; // color of pixels in minimap for current level
 uint8_t level_x1,level_y1,level_x2,level_y2;
+uint16_t start_x, start_y; // start position on world
 
 uint8_t data[256*256];
 
@@ -153,7 +154,9 @@ void move_player(struct Sprite *spr)
 		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_platform;
 
 	// -- movement 
-	if (vga_frame%4==0) { // not on ice 
+		
+	// Left / Right
+	if (vga_frame%4==0) { 
 		if (GAMEPAD_PRESSED(0,right)) {
 			if (spr->vx < 3) 
 				spr->vx++;
@@ -316,7 +319,6 @@ void sprites_reset()
 
 void interpret_spritetypes()
 {	
-	message("size sprtype:%d\n",sizeof(sprtype));
 	for (int id=0;id<NB_SPRITETYPES;id++) { // TODO 16 x 2columns
 		struct SpriteType *spt = &sprtype[id];
 		spt->color     = get_property(4+id,0);
@@ -535,17 +537,9 @@ void sprite_move(struct Sprite *spr)
 }
 
 // -- tilemap-related functions
-
-// scan tilemap, get boundaries , blanks level not part of our current level
-void interpret_level(int level)
+void get_level_boundingbox(void)
 {
-	
-
-	level_color=get_property(level,0);
-
-
-
-	// scan level enclosing rectangle in tiles
+	// scan level enclosing rectangle in tiles and fill level_x1,y1,x2,y2
 	for (int x=0;x<16;x++) {
 		for (int y=0;y<16;y++)
 			// any one of the row is the level color ? ok this is the start
@@ -587,27 +581,29 @@ void interpret_level(int level)
 
 	finished: 
 	message("Level found to be from %dx%d-%dx%d\n",level_x1,level_y1,level_x2,level_y2);
-
-	#if 0
-	// scans minimap for tiles not level but part of levels
-	for (int tid=0;tid<256;tid++) {
-		uint8_t c=get_terrain(tid);
-		// check if it's a terrain 
-		if ((c==get_property(0,0) ||  
-			 c==get_property(1,0) || 
-			 c==get_property(2,0) || 
-			 c==get_property(3,0)) && 
-			c!=level_color) {
-			// this is a tilemap not of this level 
-			for (int i=0;i<16;i++) // TODO grow from outside borders to center ? 
-				for (int j=0;j<16;j++) {
-					data[tid%16+i+(tid/16*16+j)*256]=0;
-				}
-		}
-
-	}
-	#endif 
 }
+
+// Set level start position as color white, replace with tile 0.
+void get_level_start()
+{
+	for (int j=level_y1*16;j<level_y2*16;j++)
+		for (int i=level_x1*16;i<level_x2*16;i++) {
+			if (data[j*256+i]==0xff) {
+				// move player
+				sprite[0].x=i*16;
+				sprite[0].y=j*16;
+
+				data[j*256+i]=0; // TODO replace with nearest empty terrain 
+				message("starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
+				return;
+			}
+		}
+	// Not found, set default position on top left of level
+	message("using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
+	sprite[0].x=level_x1*16;
+	sprite[0].y=level_y1*16;
+}
+
 
 // load sprites from tilemap if onscreen, or unload them if offscreen
 void manage_sprites( void )
@@ -640,7 +636,7 @@ void manage_sprites( void )
 					spr->ty = camera_y/16+j;
 					modified=1;	// will display sth on console
 					
-					*c=0; // replace tile color with sky1 // TODO replace with nearest empty
+					*c=0; // replace tile color with tileid 0==sky1 // TODO replace with nearest empty
 					break;
 				}
 		}
@@ -696,6 +692,12 @@ void sprite_collide_player(struct Sprite *spr)
 			player_kill();
 			break;
 
+		case col_end : 
+			level += 1;
+			enter_level();
+			// TODO small animation (like kill but happy) ?
+			break; 
+
 		default : 
 			message("unhandled collision type %d\n", spt->collision);
 			break;
@@ -718,7 +720,7 @@ void game_init(void)
 }
 
 
-void reset_game_data(int next_level) 
+void reset_level_data() 
 {
 	// reload all data into RAM
 	if (load_game_data(data)) {
@@ -726,9 +728,6 @@ void reset_game_data(int next_level)
 		return;
 	}
 	
-
-	next_level=level;
-
 	// scan level to find bounds and location of 2 starting points.
 
 	sprites_reset();
@@ -752,15 +751,16 @@ void reset_game_data(int next_level)
 			return;
 	}
 
-	interpret_level(level); // interpret level after mapper
+	// interpret level after mapper
+	level_color=get_property(level,0);
+	get_level_boundingbox();
+	get_level_start();
+
 
 	move_camera(); // avoid being negative
 
 	vga_frame=0;
 	coins=0;
-
-	frame_handler = frame_play;
-
 }
 
 void player_kill()
@@ -787,7 +787,7 @@ void frame_die()
 	if (vga_frame>=60*3) {
 
 		if (lives>0)
-			reset_game_data(level);
+			enter_level();
 		else 
 			enter_title(); 
 	}
@@ -810,27 +810,6 @@ void frame_play()
 		}
 }
 
-#if 0
-void enter_logo(void)
-{
-	if (load_title(data)) { 
-		frame_handler=frame_error;
-		return;
-	}
-	camera_x=(VGA_H_PIXELS-256)/2;
-	camera_y=40; 
-	frame_handler = frame_logo;
-}
-
-void frame_logo()
-{
-	// move sprites from level 0
-	if (GAMEPAD_PRESSED(0, start)) {
-		// fade ...
-		enter_title();
-	}
-}
-#endif 
 
 void enter_title(void)
 {
@@ -851,25 +830,40 @@ void frame_title()
 
 	// move sprites from level 0
 	if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_start) { 
-		// XXX start fade transition  ... level ...
+
+		// reset game
 		lives = START_LIVES;
-		reset_game_data(0);
+		level = 0;
+		//
+		enter_level();
+
 	}
 
 	// kinda like animate_tilemap only simpler
-	uint8_t tile_line = vga_frame%16; // tile line to process == 0-15
-	if (tile_line<8) {	
-		for (int i=0;i<16;i++) { // process one line each frame.
-			uint8_t *c = &data[(TILE_TITLE_Y*16+tile_line)*256+TILE_TITLE_X*16+i];
-			if (get_terrain(*c)==terrain_animated_empty) {
-				*c += (*c%4!=3) ? 1 : -3;
-			}
+	uint8_t tile_line = vga_frame%8; // tile line to process == 0-7
+	for (int i=0;i<16;i++) { // process one line each frame.
+		uint8_t *c = &data[(TILE_TITLE_Y*16+tile_line)*256+TILE_TITLE_X*16+i];
+		if (get_terrain(*c)==terrain_animated_empty) {
+			*c += (*c%4!=3) ? 1 : -3;
 		}
 	}
 
 	gamepad_oldstate = gamepad_buttons[0];
 }
 
+void enter_level()
+{
+	vga_frame=0;
+	frame_handler=frame_leveltitle;
+}
+
+void frame_leveltitle()
+{
+	if (vga_frame>=150) {
+		reset_level_data();
+		frame_handler = frame_play;
+	}
+}
 
 void frame_error()
 {

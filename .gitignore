@@ -1,0 +1,6 @@
+build/
+*.elf
+*.bin
+*_emu
+__*
+defs.h
