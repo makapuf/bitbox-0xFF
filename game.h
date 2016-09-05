@@ -20,19 +20,22 @@
 
 #define START_LIVES 5
 
+#define SPRITE_INACTIVE 200 // still loaded but not active, of type 200+old_type
+#define SPRITE_FREE 255 // not loaded, place is free
+
 
 // Types
 // -----------------------------------
 
 struct Sprite {
 	int32_t  x,y; // pos 
-	int vx,vy; // speed
+	int     vx,vy; // speed
 	uint8_t hflip; // h flip. not always linked to vx
 
 	uint8_t frame; // in animation
 	uint8_t state; // zero init, spec depends on type 
 
-	uint8_t type;  // TRANSPARENT meaning undefined sprite
+	uint8_t type;  // TRANSPARENT meaning undefined sprite, else type id 0-31
 
 	uint8_t tx,ty; // original position on level in tiles (absolute), 0,0 means none
 };
@@ -69,6 +72,7 @@ extern struct SpriteType sprtype[NB_SPRITETYPES];
 extern struct Sprite sprite[MAX_SPRITES];
 
 extern int lives, coins, level, keys;
+extern char hud[20]; // 0123456789:lkgtWLEVS (l=life,k=key,g=gold, t=time) -> 0123456789ABCDEFGHIJ and ' ' is space
 
 // Functions
 // -----------------------------------

@@ -10,10 +10,11 @@ level_pos | property(0-7) | comment
 ----------|----------|---------
 color     | 0 | color of the terrain on the minimap
 control   |   | see control types
-jumps     |   | see jump types
-physics   |   | (gravity, maxspeed ) as a 2D vector pixel. if gravity is zero, maxspeed also applies to vertical movement
+accel   |   | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
+maxspeed   |   | X/Y max speed as a 2D vector pixel. depends on controls
+altmaxspeed   |   | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
 
-2D vector pixels are defined by a center +  a position in X and Y on the palette. 
+2D vector pixels are taken from X/Y position of color on the palette, e.g. color 81 = 5*16+1 -> x=1,y=5
 
 ### control types
 
@@ -21,29 +22,15 @@ Player control type
 
 control | id | description / controls
 -----|----|----------------------
-classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes weapon if several gained
+classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile if several gained.
 hit |  | left/right ; B: run ; Y : hits enemies (horizontally) : 1 more frame for hitting
 modern | | can double/wall jump, stomp vertically on enemies (like hitting them)
 runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
 runner | | always goes right at average speed, can jump, sometimes fire
 aim | | can go left+right, aims by 45 degrees increments 
 beatemup | | can jump on ladders, falls back where we are
-nojump | | restricted mode : cannot jump or run but can push objects
+nojump | | cannot jump (nor run)
 
-
-### jump types
-
-Player jump type.
-
-jump | id | description
------|----|-----------
-none | 0 | cant jump
-simple | 1 | simple jumping
-simple+stomp | | can stomp enemies vertically by pressing down while jumping (hit them)
-double |  | double jump (stomps)
-triple |  | triple jump (stomps)
-double+wall | | double & wall jump
-double+wall+stomp | | can stomp objects 
 
 
 ### Terrains
@@ -76,7 +63,7 @@ Indices in object type definition bytes. 8 colors defined max.
  movement |1| type of movement (see object movements)
  collision |2| type of collision - sprite_collide (see object collisions table)
  spawn | 3 | type of sprite spawned when this object dies
- alt_collision | | alt collision type 
+ alt_collision | | alt collision type (does not influence respawning)
  alt_collision_when | | condition where alt collision is triggered (never, top, bottom, all except top, all except bottom, when punched/kicked, when punched but only up or down ... )
 
 
@@ -115,21 +102,31 @@ Object collision types : what happens when an object of this type collides with 
 
 col | color id | comment
 ------ | ------ | ------
-none | 230 | no collision
-kill | 240 | red (==terrain_kill) , kills player instantly
+none | 230 | no collision - respawns
+kill | 240 | red (==terrain_kill) kills player instantly - respawns
+killnorespawn | 237 | kills player instantly
 block | terrain_obstacle | blocks the player - can push it
 coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
-life | 25 | green, gives a life and disappear with explosion animation
-keyA |  137 | gives a key of type A
-end | 255| ends level
-keyB |   | gives a key of type B
-block_1keyA | | ends level if you've 1 key  of type A
-block_3keyA | | ends level if you've 3 keys of type A
-block_3keyB | | ends level if you've 3 keys of type B
+life | 25 | green, gives a life and disappear with explosion animation 
+key |  137 | gives a key
+end | 255| ends level 
 switch | | transform next object in list into its next object (ex. if object in pos 3, objects 4 get transformed in objects 5 and reciprocally)
-killjump | | kills player if hit from bottom or side, but stomps if jump on it (or 
-killhit | | kills the player when touched from any angle , can be killed if stomped or hit
+3keys | | switch (next types...) only if you've got 3 keys
+fire | | allows firing of projectile of type defined just after
 restart | | the object dies once touched. the player will respawn here once touched.
+
+
+### Projectile Type 
+
+Projectile types are similar to object types (and are defined in the same space) but collision handling is different. 
+
+ proj_property | position | comment 
+--------- | --------- | -------
+ color |0| id of the 4 frame-8x8 mini sprites tile
+ movement |1| type of movement (see object movements)
+ collision |2| type of collision - sprite_collide (see object collisions table) - projectiles collide only with objects
+ spawn | 3 | type of sprite spawned when this object dies - or TRANSPARENT
+
 
 ### Black Mapper Terrain types 
 

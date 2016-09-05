@@ -119,7 +119,7 @@ void black_mapper()
 				case blk_terrain_obstacle2 : 
 					search_rect_h(x,y,&w,&h);
 
-					message("obstacle %d,%d %dx%d\n",x,y,w,h);
+					message("   mapper: obstacle %d,%d %dx%d\n",x,y,w,h);
 					
 					if (h==1) {        // horizontal pipe
 						if (w==1) {
@@ -169,7 +169,7 @@ void black_mapper()
 				case blk_terrain_decor : 
 				case blk_terrain_decor2 : 
 					search_rect_h(x,y,&w,&h);
-					message("decor %d,%d %dx%d\n",x,y,h,w);
+					message("    mapper : decor %d,%d %dx%d\n",x,y,h,w);
 
 					if (mapper_get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
 						if (h==1) {
@@ -221,7 +221,7 @@ void black_mapper()
 				case blk_terrain_kill : 
 					search_rect_h(x,y,&w,&h);
 
-					message("kill %d,%d %dx%d\n",x,y,h,w);
+					message("    mapper kill %d,%d %dx%d\n",x,y,h,w);
 					if (w==1 && h==1) {
 						if (mapper_get_terrain(data[(y+h)*256+x])==terrain_obstacle) { // under
 							data[y*256+x]=blk_tile_kill_over;

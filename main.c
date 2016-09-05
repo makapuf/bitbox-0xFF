@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdbool.h>
+
 #include <string.h>
 
 #include "bitbox.h"
@@ -312,8 +314,7 @@ void move_camera(void)
 void sprites_reset()
 {
 	for (int i=0;i<MAX_SPRITES;i++) {
-		sprite[i].type=TRANSPARENT;
-		sprite[i].y=65536;
+		sprite[i].type=SPRITE_FREE; 
 	}
 }
 
@@ -412,14 +413,19 @@ inline struct Sprite *spawn_sprite(uint8_t type, int x, int y)
 	int pos=0;
 
 	// find a proper empty place to pos
-	for (pos=0;sprite[pos].type!=TRANSPARENT;pos++);
+	for (pos=0;pos<MAX_SPRITES && sprite[pos].type!=SPRITE_FREE;pos++);
 
-	sprite[pos].x  = x;
-	sprite[pos].y  = y;
+	if (pos==MAX_SPRITES) {
+		message("cannot insert new sprite : not enough, will overdraw (now %d)",pos);
+		pos=MAX_SPRITES-1;
+	}
+
+
 	sprite[pos].type = type;
-	sprite[pos].vx = 0;
-	sprite[pos].vy = 0;
 	sprite[pos].frame = 0;
+	sprite[pos].x  = x;  sprite[pos].y  = y;
+	sprite[pos].vx = 0;  sprite[pos].vy = 0;
+	sprite[pos].tx = 255; sprite[pos].ty=255;
 
 	sprite[pos].hflip=0; 
 
@@ -434,8 +440,7 @@ inline void sprite_kill(struct Sprite *spr)
 	const uint8_t spawn = sprtype[spr->type].spawn;
 	if (spawn != TRANSPARENT)
 		spawn_sprite(spawn,spr->x,spr->y);			
-	spr->type=TRANSPARENT; // remove
-	spr->y=65536;
+	spr->type+=SPRITE_INACTIVE; // remove : set inactive (type) but not unloaded
 }
 
 
@@ -588,7 +593,7 @@ void get_level_start()
 {
 	for (int j=level_y1*16;j<level_y2*16;j++)
 		for (int i=level_x1*16;i<level_x2*16;i++) {
-			if (data[j*256+i]==0xff) {
+			if (data[j*256+i]==get_property(level,1)) {
 				// move player
 				sprite[0].x=i*16;
 				sprite[0].y=j*16;
@@ -605,17 +610,33 @@ void get_level_start()
 }
 
 
-// load sprites from tilemap if onscreen, or unload them if offscreen
+// load sprites from tilemap if onscreen, or unload them to tilemap if offscreen
 void manage_sprites( void )
 {	
 	int modified=0;
 
-	// first unload offline sprites ( put them back on stage ? )
-	for (int i=1;i<MAX_SPRITES;i++) {
-		if (sprite[i].type == TRANSPARENT ) continue;
+	// first unload offscreen sprites ( put them back on tilemap)
+	for (int i=1;i<MAX_SPRITES;i++) { // 0 is the player :)
+		if (sprite[i].type == SPRITE_FREE ) continue;
 		else if (sprite[i].x - camera_x + sprtype[sprite[i].type].w < -32 || sprite[i].x-camera_x > VGA_H_PIXELS+32) {
-			message("Hiding sprite %d (%d,%d) outside of screen\n",i,sprite[i].x, sprite[i].y);
-			sprite[i].type=TRANSPARENT;
+			message("Hiding sprite %d (%d,%d) of type %d outside of screen\n",i,sprite[i].x, sprite[i].y, sprite[i].type);
+
+
+			if (data[sprite[i].tx!=255 || sprite[i].ty!=255]) {
+				uint8_t typ = sprite[i].type;
+				bool respawn=true;
+
+				// active : respawn, else re-spawn if typ has specific values
+				if (typ>=SPRITE_INACTIVE) {
+					typ-=SPRITE_INACTIVE;
+					respawn = (typ == col_none || typ==col_kill);
+				}
+				
+				// get type color &put back on tilemap if respawn
+				if (respawn) 
+					data[sprite[i].ty*256+sprite[i].tx] = get_property(typ+4,property_color); 
+			}
+			sprite[i].type=SPRITE_FREE;
 			modified=1;
 		}
 	}
@@ -636,18 +657,24 @@ void manage_sprites( void )
 					spr->ty = camera_y/16+j;
 					modified=1;	// will display sth on console
 					
-					*c=0; // replace tile color with tileid 0==sky1 // TODO replace with nearest empty
+					*c=0; 
+					// TODO replace with nearest empty
+					// TODO : remember init position sur pos vide & type in array of elts 32x(u8 x,y,type), when pos not visible, re-place in tilemap - pas nec tt d'un coup : scanne 1/4 à la fois ? 
+
 					break;
 				}
 		}
 
 	if (modified) {	
 		message("now sprites :");
-		for (int i=0;i<MAX_SPRITES;i++)
-			if (sprite[i].type != TRANSPARENT)
-				message("%02x",sprite[i].type);
-		    else 
-		    	message("  ");
+		for (int i=0;i<MAX_SPRITES;i++) {
+		    if (sprite[i].type==SPRITE_FREE)
+		    	message ("   ");
+			else if (sprite[i].type>=SPRITE_INACTIVE)
+	    		message("-%02x",sprite[i].type- SPRITE_INACTIVE );
+	    	else 
+				message("%02x ",sprite[i].type);
+		}
 		message("\n");
 	}
 }
@@ -706,6 +733,18 @@ void sprite_collide_player(struct Sprite *spr)
 
 }
 
+void update_hud()
+{
+	hud[12]='0'+vga_frame/6000;
+	hud[13]='0'+(vga_frame/600)%10;
+	hud[14]='0'+(vga_frame/60) %10;
+
+	// TODO keys ?
+
+	hud[17]='0'+coins/10;
+	hud[18]='0'+coins%10;
+}
+
 // ---------------------------------------------------------------------------------------
 
 void game_init(void)
@@ -728,8 +767,6 @@ void reset_level_data()
 		return;
 	}
 	
-	// scan level to find bounds and location of 2 starting points.
-
 	sprites_reset();
 	player_reset();
 	interpret_spritetypes();
@@ -753,9 +790,15 @@ void reset_level_data()
 
 	// interpret level after mapper
 	level_color=get_property(level,0);
+	// scan level to find bounds and location of starting point.
 	get_level_boundingbox();
 	get_level_start();
 
+	memcpy(hud,"B0 F0G0 C0 E000 D00  ",sizeof(hud));
+	
+	hud[1]='0'+lives;
+	hud[6]='0'+level+1; 
+	
 
 	move_camera(); // avoid being negative
 
@@ -802,12 +845,13 @@ void frame_play()
 	animate_tilemap();
 
 	for (int i=1;i<MAX_SPRITES;i++)
-		if (sprite[i].type != TRANSPARENT) {
+		if (sprite[i].type < SPRITE_INACTIVE ) {
 			sprite_move(&sprite[i]);
 			if (sprite_collide(&sprite[0], &sprite[i])) {
 				sprite_collide_player(&sprite[i]);
 			}
 		}
+	update_hud();
 }
 
 
@@ -820,7 +864,7 @@ void enter_title(void)
 
 	frame_handler = frame_title;
 
-	manage_sprites(); // once
+	// manage_sprites(); // TODO add sprites for title srceen ?
 
 }
 
@@ -855,11 +899,23 @@ void enter_level()
 {
 	vga_frame=0;
 	frame_handler=frame_leveltitle;
+
+	// title hud
+	memcpy(hud," B0 GHIHG 1A0       ",20);
+	hud[2]='0'+lives;
+	hud[12]='0'+level+1;
+
+	camera_y = -100;
 }
 
 void frame_leveltitle()
 {
-	if (vga_frame>=150) {
+	// title animation. TODO cubic / elastic easing ? 
+	if (vga_frame<250) {
+		float t= (float)vga_frame/250.f;
+
+		camera_y = (int)(-100 + 400*(4*t*t*t + -6*t*t + 3*t));
+	} else {
 		reset_level_data();
 		frame_handler = frame_play;
 	}

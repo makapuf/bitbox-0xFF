@@ -75,7 +75,7 @@ You can use that to specify every tile of your levels. but how can we specify ho
 Tilesets and Terrains
 =====================
 
-As we saw, the tileset will be defined by drawing tiles on your image and referencing those by their color Id on the level maps. But what about their behavior ? What defines that a ground can be stood on, lava kills, you can fall through the air and that the mountain in in the background ?
+As we saw, the tileset will be defined by drawing tiles on your image and referencing those by their color Id on the level maps. But what about their behavior ? What defines that a ground can be stood on, lava kills, you can fall through the air and that the mountain is in the background ?
 
 Well, each on your image used as a tile for your game will be referenced by the minimap, and we will encode its behaviour with different colors. 
 
@@ -93,7 +93,7 @@ But we don't have any enemies and no way to tell how your level *plays*. Well, t
 
 In fact, to position objects on the map, you will paint their position on the tilemap with a pixel corresponding to their ObjectType color (see here after). 
 
-> And the player, where does it start ? Well, that's for the pixel on your level tilemap with *color 255/white*. If there is none, player will start at top left of your level.
+> And the player, where does it start ? Well, that's for the pixel on your level tilemap with *color as the color of your player in the level (tile_id)*. If there is no such pixel, player will start at top left of your level.
 
 Object Types
 ============
