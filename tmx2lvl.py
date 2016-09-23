@@ -9,7 +9,7 @@ from PIL import Image
 
 from lvl2tmx import parse_defs
 
-sys.argv.append('out.tmx')
+sys.argv.append('__assets/chateau.tmx')
 
 parser = argparse.ArgumentParser(description='Process TMX files to bmp level file')
 parser.add_argument('file',help='input .tmx filename')
@@ -47,9 +47,12 @@ terrain_ids   = [DEFS['terrains'][tn] for tn in terrain_names]
 # tile data
 for t in tileset.findall('tile') : 
 	tid = int(t.get('id'))
-	terrains = set(t.get('terrain').split(','))
-	assert len(terrains)==1,'several terrains defined for tile %d (%d,%d)'%(tid,tid%16,tid//16)
-	minimap[tid//16][tid%16]=terrain_ids [int(terrains.pop())]
+	# XXX terrain not defined ? ok
+	terrains = t.get('terrain')
+	if terrains is not None : 
+		terrains = set(terrains.split(','))
+		assert len(terrains)==1,'several terrains defined for tile %d (%d,%d)'%(tid,tid%16,tid//16)
+		minimap[tid//16][tid%16]=terrain_ids [int(terrains.pop())]
 
 # make a copy for resulting image
 dest_img = tileset_image.copy()

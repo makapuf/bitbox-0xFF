@@ -115,9 +115,15 @@ inline uint8_t get_property(const int object_id, const int property)
 	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
 }
 
+// read pixel at x,y in tile number X
+inline uint8_t read_tile(const uint8_t tile_id, const uint8_t x, const uint8_t y)
+{
+	return data[(tile_id/16*16+y)*256+(tile_id%16)*16 + x];
+}
+
 
 // tile id to terrain (ie. read minimap)
 inline uint8_t get_terrain (const uint8_t tile_id)
 {
-	return data[(15*16+(tile_id/16))*256+tile_id%16]; // minimap values
+	return read_tile(240,tile_id%16,tile_id/16); 
 }

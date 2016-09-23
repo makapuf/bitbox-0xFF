@@ -30,7 +30,8 @@ runner | | always goes right at average speed, can jump, sometimes fire
 aim | | can go left+right, aims by 45 degrees increments 
 beatemup | | can jump on ladders, falls back where we are
 nojump | | cannot jump (nor run)
-
+side | | player can control X and Y but always faces right. No jumping/running. Slow right autoscroll. 
+down | | player can control X and Y but always faces up. No jumping/running. Slow up autoscroll.
 
 
 ### Terrains
@@ -105,7 +106,7 @@ col | color id | comment
 none | 230 | no collision - respawns
 kill | 240 | red (==terrain_kill) kills player instantly - respawns
 killnorespawn | 237 | kills player instantly
-block | terrain_obstacle | blocks the player - can push it
+block | 104| (=terrain obstacle) blocks the player - can push it
 coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
 life | 25 | green, gives a life and disappear with explosion animation 
 key |  137 | gives a key

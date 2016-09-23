@@ -124,7 +124,7 @@ def gen_tmx(tileset,tilemap) :
         of.write('\n</map>')
 
 if __name__=='__main__' : 
-    argparser = argparse.ArgumentParser(description='Process TMX files to tset/tmap/.h files')
+    argparser = argparse.ArgumentParser(description='process level to generate tmx/song files')
     argparser.add_argument('file',nargs='?',help='input .bmp filename',default='levels/level0.bmp')
     args = argparser.parse_args()
 
@@ -145,7 +145,7 @@ if __name__=='__main__' :
     # objects+types : 1 sprite utilise forcement. ordre ! (pour switches)
     # level color
     # black mapper ?? simple export
-
-
+    # exports dummy layer with tiles defined (either by terrain or with pixels on tileset)
+    # ids in grid ??
 
 

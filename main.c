@@ -177,6 +177,7 @@ void move_player(struct Sprite *spr)
 	// Jump - TODO double / triple / wall jump 
 	if (gamepad_pressed & gamepad_A ) {
 		if (on_ground) {
+			play_sfx(0); // play ! // TODO add in ref
 			spr->vy = -6;
 		}
 	}
@@ -711,6 +712,7 @@ void sprite_collide_player(struct Sprite *spr)
 			// adds coin, small sfx + animations, remove
 			coins += 1;
 			sprite_kill(spr);
+			play_sfx(2); // TODO defs.h
 
 		
 			break;
@@ -801,6 +803,8 @@ void reset_level_data()
 	
 
 	move_camera(); // avoid being negative
+	
+	play_song(); // start playing song
 
 	vga_frame=0;
 	coins=0;
@@ -809,6 +813,8 @@ void reset_level_data()
 void player_kill()
 {
 	frame_handler = frame_die;
+	stop_song();
+	play_sfx(1); // TODO : defs.h
 
 	sprite[0].vy = -6;
 	vga_frame=0;

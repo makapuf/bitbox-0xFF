@@ -18,7 +18,7 @@ static void draw_hudline(const int x, const int y)
 				chr = chr>='A' ? chr+256-'A' : chr-'0';
 
 				for (int dx=0;dx<8;dx++) {
-					uint8_t c=data[15*16*256+64+dx+chr*8+(vga_line-y)*256];
+					uint8_t c=data[15*16*256+5*16+dx+chr*8+(vga_line-y)*256];
 					if (c!=TRANSPARENT)
 						draw8[x+dx+i*8]=c;
 				}
