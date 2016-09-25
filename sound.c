@@ -80,6 +80,7 @@ void play_sfx(int n) // n=0-15 or -1 to stop
 	sfx_playing=n;
 	sfx_tick=0;	
 	sfx_speed=read_tile(SFX_TILE,0,n);
+	osc[NB_CHANNELS].instfr = 0xff; // will start first note immediately 
 	osc[NB_CHANNELS].waveform=read_tile(SFX_TILE,1,n);
 	message("SFX %d speed %d waveform %d\n",n,sfx_speed, osc[NB_CHANNELS].waveform);
 }
@@ -193,7 +194,7 @@ static void update_sfx()
 	if (sfx_playing<0) return; // no SFX playing
 	struct oscdef * const sfxosc=&osc[NB_CHANNELS]; // shortcut
 
-	if (sfxosc->instfr==sfx_speed) {
+	if (sfxosc->instfr>=sfx_speed) {
 
 		uint8_t pix=read_tile(SFX_TILE,sfx_tick+5,sfx_playing);
 		if (pix!=TRANSPARENT) { // TODO stop
