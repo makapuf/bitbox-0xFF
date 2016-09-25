@@ -108,19 +108,19 @@ void black_mapper(void);
 // Inlines 
 // ----------------------------------
 
-// get property id (0-7) from object id (to sprite_type)
-// objects 0-4 are levels ! 
-inline uint8_t get_property(const int object_id, const int property) 
-{
-	return data[(15*16+object_id%16)*256+property+16 + (object_id>=16)*8];
-}
 
 // read pixel at x,y in tile number X
-inline uint8_t read_tile(const uint8_t tile_id, const uint8_t x, const uint8_t y)
+inline uint8_t read_tile(const uint8_t tile_id, const int x, const int y)
 {
 	return data[(tile_id/16*16+y)*256+(tile_id%16)*16 + x];
 }
 
+// get property id (0-7) from object id (to sprite_type)
+// objects 0-4 are levels ! 
+inline uint8_t get_property(const int object_id, const int property) 
+{
+	return read_tile(0xF1,property+(object_id>=16)*8,object_id%16);
+}
 
 // tile id to terrain (ie. read minimap)
 inline uint8_t get_terrain (const uint8_t tile_id)
