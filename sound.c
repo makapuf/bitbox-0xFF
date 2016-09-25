@@ -7,12 +7,17 @@
 
 // songtempo in level+song def apres level titles. 
 // 4x (1 line=4x4 u8 for instrs, 3 lines=48patterns refs to patterns. 4 lines per level, 16 beats, 4 lines per level)
+// instr byte 1 : 2d instr x / volume y
+// instr byte 2 : 2d x sustain / y decay speed
+
+
 
 // sfx = instr (4) + speed + pattern=11 notes (saut, kill, tir/hit, ) to be played stealing channel 0 (3?)
+// sfx byte1 = speed (frames per note), 
+// sfx byte 2: wave form
+// TODO: add instr in SFX ?
 
-/* todo : instruments ! include instyument in in sfx / song note play */ 
-
-// TO reference 
+// TODO reference 
 #define NB_CHANNELS 4
 #define SFX_TILE 0xF4
 #define SONGS_TILE 0xF3
@@ -23,10 +28,7 @@ struct oscdef {
 	uint8_t waveform; // 1: square 12%; 2:square 25%, 3:square 50%, 4:triangle, 5:noise -> refs
 	uint8_t sustain; // stay constant for x ticks then decay
 	uint8_t decay;   // decay of volume per frame, 0=infinite note, 10:abrupt 
-	// attack/decay 2D
-	// i8 fsweep/lfo ? 2d
-	// bitcrush ..
-
+	// i8 fsweep/bitcrush ? 2d
 	
 	// frame based
 	uint8_t volume; // current volume. 
@@ -56,9 +58,10 @@ void play_song()
 {
 	// defaults
 	for (int i=0;i<NB_CHANNELS;i++) {
-		osc[i].decay=6; // speed
-		osc[i].sustain=5; // 1/60s max ~ 70
-		osc[i].waveform=3;
+		osc[i].decay=   read_tile(SONGS_TILE,4*i+1,4*level)/16*2+1; // decay speed in 1/255 per frame. 0=slow
+		osc[i].sustain= read_tile(SONGS_TILE,4*i+1,4*level)%16*4; // x4, in frames ; max 15*8/60=1s
+		osc[i].waveform=read_tile(SONGS_TILE,4*i  ,4*level)%16;
+		message("Channel %d instr %d\n",i,osc[i].waveform);;
 	}
 
 	tick=pattern=frame=0;
@@ -77,6 +80,8 @@ void play_sfx(int n) // n=0-15 or -1 to stop
 	sfx_playing=n;
 	sfx_tick=0;	
 	sfx_speed=read_tile(SFX_TILE,0,n);
+	osc[NB_CHANNELS].waveform=read_tile(SFX_TILE,1,n);
+	message("SFX %d speed %d waveform %d\n",n,sfx_speed, osc[NB_CHANNELS].waveform);
 }
 
 
@@ -151,7 +156,7 @@ static inline uint8_t color2note(uint8_t pix)
 // start a given note (0-127) on a given channel
 static void start_note(int n,uint8_t note )
 {
-	osc[n].volume=0xb0;
+	osc[n].volume=read_tile(SONGS_TILE,4*n,4*level)/16*16; // default channel volume
 	osc[n].freq=freqtable[note]/4; 
 	osc[n].instfr=0; // frame of the instr
 }
@@ -162,12 +167,11 @@ static void update_song()
 	if (!play) return;
 
 	if (frame==speed) {
-		for (int chan=0;chan<NB_CHANNELS;chan++) 
-		{
-			uint8_t patid=read_tile(SONGS_TILE,pattern,1); // TODO 3 lines song, stop
+		for (int chan=0;chan<NB_CHANNELS;chan++) {
+			uint8_t patid=read_tile(SONGS_TILE,pattern%16,1+pattern/16); // TODO 3 lines song, stop
 			if (patid != TRANSPARENT) {
 				uint8_t pix=read_tile(patid,tick,chan+level*4);
-				if ( pix!=TRANSPARENT && chan!=3 ) {
+				if ( pix!=TRANSPARENT ) {
 					start_note(chan,color2note(pix));
 				}
 			}
@@ -187,21 +191,23 @@ static void update_song()
 static void update_sfx()
 {
 	if (sfx_playing<0) return; // no SFX playing
-	uint8_t * const instfr=&osc[NB_CHANNELS].instfr; // shortcut
+	struct oscdef * const sfxosc=&osc[NB_CHANNELS]; // shortcut
 
-	if (*instfr==sfx_speed) {
+	if (sfxosc->instfr==sfx_speed) {
 
 		uint8_t pix=read_tile(SFX_TILE,sfx_tick+5,sfx_playing);
 		if (pix!=TRANSPARENT) { // TODO stop
-			start_note(NB_CHANNELS,color2note(pix));
+			sfxosc->volume=0xf0; // default channel volume
+			sfxosc->freq=freqtable[color2note(pix)]/4; 
+			sfxosc->instfr=0; // frame of the instr
 		} else {
-			osc[NB_CHANNELS].volume=0;
+			sfxosc->volume=0;
 			sfx_playing=-1;
 		}
-		*instfr=0;
+		sfxosc->instfr=0;
 		sfx_tick+=1;
 	}
-	osc[NB_CHANNELS].instfr+=1;
+	sfxosc->instfr+=1;
 }
 
 static void update_osc()
