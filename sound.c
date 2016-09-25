@@ -4,7 +4,6 @@
 #include "bitbox.h"
 #include "game.h"
 
-// TO reference 
 
 // songtempo in level+song def apres level titles. 
 // 4x (1 line=4x4 u8 for instrs, 3 lines=48patterns refs to patterns. 4 lines per level, 16 beats, 4 lines per level)
@@ -13,8 +12,11 @@
 
 /* todo : instruments ! include instyument in in sfx / song note play */ 
 
+// TO reference 
 #define NB_CHANNELS 4
-#define sfxpat 244
+#define SFX_TILE 0xF4
+#define SONGS_TILE 0xF3
+#define SFX_REPLACES_CHAN 2 // SFX will be played instead of channel 
 
 struct oscdef {
 	// instr def
@@ -33,7 +35,7 @@ struct oscdef {
 
 	// sample
 	uint16_t phase;
-} osc[NB_CHANNELS];
+} osc[NB_CHANNELS+1]; // last channel is for SFX.
 
 // Song position
 static int frame; // 1/60s
@@ -44,9 +46,8 @@ int speed=9;
 
 // sfx position.
 static int sfx_playing=-1; // 0-15, <0 = none
-static int sfx_frame; // 1/60s
 static int sfx_tick; 
-int sfx_speed=1;
+static int sfx_speed=1;
 
 
 static uint32_t lcgrng=1;
@@ -74,9 +75,8 @@ void stop_song()
 void play_sfx(int n) // n=0-15 or -1 to stop
 {
 	sfx_playing=n;
-	sfx_frame=0;
 	sfx_tick=0;	
-	sfx_speed=read_tile(sfxpat,0,n);
+	sfx_speed=read_tile(SFX_TILE,0,n);
 }
 
 
@@ -86,7 +86,10 @@ static inline uint16_t gen_sample()
 	uint16_t v;
 
 	int accum=0;
-	for (int n=0;n<NB_CHANNELS;n++) {
+	for (int n=0;n<=NB_CHANNELS;n++) {
+		// skip rendering a channel if sfx is playing or sfx(=last)  channel  if not 
+		if (n==((sfx_playing<0) ? NB_CHANNELS : SFX_REPLACES_CHAN)) 
+			continue; 
 
 		osc[n].phase+=osc[n].freq/4;
 		v=0;
@@ -154,15 +157,14 @@ static void start_note(int n,uint8_t note )
 }
 
 
-void update_song()
+static void update_song()
 {
 	if (!play) return;
 
 	if (frame==speed) {
 		for (int chan=0;chan<NB_CHANNELS;chan++) 
 		{
-			uint8_t songpat=243;
-			uint8_t patid=read_tile(songpat,pattern,1); // TODO 3 lines song, stop
+			uint8_t patid=read_tile(SONGS_TILE,pattern,1); // TODO 3 lines song, stop
 			if (patid != TRANSPARENT) {
 				uint8_t pix=read_tile(patid,tick,chan+level*4);
 				if ( pix!=TRANSPARENT && chan!=3 ) {
@@ -182,25 +184,27 @@ void update_song()
 	frame += 1;
 }
 
-void update_sfx()
+static void update_sfx()
 {
 	if (sfx_playing<0) return; // no SFX playing
-	if (sfx_frame==sfx_speed) {
+	uint8_t * const instfr=&osc[NB_CHANNELS].instfr; // shortcut
 
-		uint8_t pix=read_tile(sfxpat,sfx_tick+5,sfx_playing);
+	if (*instfr==sfx_speed) {
+
+		uint8_t pix=read_tile(SFX_TILE,sfx_tick+5,sfx_playing);
 		if (pix!=TRANSPARENT) { // TODO stop
-			start_note(0,color2note(pix));
+			start_note(NB_CHANNELS,color2note(pix));
 		} else {
-			osc[0].volume=0;
+			osc[NB_CHANNELS].volume=0;
 			sfx_playing=-1;
 		}
-		sfx_frame=0;
+		*instfr=0;
 		sfx_tick+=1;
 	}
-	sfx_frame+=1;
+	osc[NB_CHANNELS].instfr+=1;
 }
 
-void update_osc()
+static void update_osc()
 {
 	for (int n=0;n<NB_CHANNELS;n++) { // voice
 		osc[n].instfr++;
@@ -218,7 +222,7 @@ void game_snd_buffer(uint16_t *buffer, int len) {
 	// process frame-based info ~ 60Hz (len=512 samples @ 32kHz)
 
 	update_song(); // update song playing 
-	update_sfx();  // can override song
+	update_sfx();  
 	update_osc();  // update osc values
 
 	// process sound based info to left/r channels
