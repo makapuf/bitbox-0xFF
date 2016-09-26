@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 
+#include "defs.h" // generated from REFERENCE.md 
 // Defines
 // -----------------------------------
 
@@ -68,6 +69,8 @@ extern uint8_t level_color; // color of pixels in minimap
 
 extern int player_x, player_y; // position inside whole map (data seen as a 256x256 tilemap. 
 extern int camera_x, camera_y; // vertical position of the title/scroll
+extern uint8_t level_x1,level_y1,level_x2,level_y2;
+
 extern struct SpriteType sprtype[NB_SPRITETYPES]; 
 extern struct Sprite sprite[MAX_SPRITES];
 
@@ -94,18 +97,35 @@ int load_bmp (const char *filename); // --> init + load_next (cycle)
 int load_game_data (uint8_t *data);
 int sine (uint8_t phi);
 
+// sprites
 void interpret_spritetypes();
-
-void player_kill();
-uint8_t collision_tile(const struct Sprite *spr);
+void sprites_reset();
+void sprite_kill(struct Sprite *spr);
 void sprite_move(struct Sprite *spr);
+void all_sprite_move() ;
+uint8_t collision_tile(const struct Sprite *spr);
+struct Sprite *spawn_sprite(uint8_t type, int x, int y);
+
+
+// player
+void move_camera(void);
+void move_player(struct Sprite *spr);
+void player_reset(void);
+void player_kill();
+
+// sounds
+void play_sfx( int sfx_id ); 
+void play_song();
+void stop_song();
+
+// player
 void manage_sprites();
 uint8_t terrain_at(int x, int y);
 
 void black_mapper(void);
 
 
-// Inlines 
+// Pure inlines 
 // ----------------------------------
 
 
@@ -126,4 +146,12 @@ inline uint8_t get_property(const int object_id, const int property)
 inline uint8_t get_terrain (const uint8_t tile_id)
 {
 	return read_tile(240,tile_id%16,tile_id/16); 
+}
+
+
+inline int is_walkable(uint8_t terrain) {
+	return terrain == terrain_obstacle || 
+		   terrain == terrain_ice || 
+		   terrain == terrain_ladder || 
+		   terrain == terrain_platform;
 }

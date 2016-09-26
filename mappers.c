@@ -1,9 +1,8 @@
 // loader
 #include <string.h>
+#include "bitbox.h" // message
 
 #include "game.h"
-#include "bitbox.h" // message
-#include "defs.h"
 
 int minstd_rand()
 {
