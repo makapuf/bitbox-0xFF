@@ -10,7 +10,6 @@
 int lives;
 int coins;
 int level; // 0-3
-int njumps; // current value for double/triple jumps
 
 uint8_t level_color; // color of pixels in minimap for current level
 uint8_t level_x1,level_y1,level_x2,level_y2; // bounding box of level in tiles

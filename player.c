@@ -3,6 +3,9 @@
 
 #include "game.h"
 
+#define NJUMPS 0; // 2 for triple jumps, 0 for single ones
+int njumps; // current value for double/triple jumps
+
 // get the terrain type located at pixel in level position x,y
 inline uint8_t terrain_at(int x, int y)
 {
@@ -75,11 +78,18 @@ void move_player(struct Sprite *spr)
 		}
 	}
 
-	// Jump - TODO double / triple / wall jump 
+
+
+	// Jump 
 	if (gamepad_pressed & gamepad_A ) {
 		if (on_ground) {
 			play_sfx(0); // play ! // TODO add in ref
 			spr->vy = -6;
+			njumps=NJUMPS; // TODO add to leveldef
+		} else if (njumps) {
+			play_sfx(0); // play ! // TODO add in ref
+			spr->vy = -6;
+			njumps--;
 		}
 	}
 
