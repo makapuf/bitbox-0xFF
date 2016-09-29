@@ -1,10 +1,12 @@
 // player related functions
+#include <stdbool.h>
 #include "bitbox.h"
 
 #include "game.h"
 
 #define NJUMPS 0; // 2 for triple jumps, 0 for single ones
 int njumps; // current value for double/triple jumps
+
 
 // get the terrain type located at pixel in level position x,y
 inline uint8_t terrain_at(int x, int y)
@@ -21,9 +23,9 @@ inline uint8_t terrain_at(int x, int y)
 
 void player_reset()
 {
-	// TODO real start of level ! 
+	// real start of level in get_level_start
 	sprite[0].x=0;
-	sprite[0].y=150+4*256;
+	sprite[0].y=0;
 	sprite[0].frame=0;
 	sprite[0].type =0;
 }
@@ -53,16 +55,23 @@ void move_player(struct Sprite *spr)
 	struct SpriteType *spt = &sprtype[spr->type];
 
 	// FIXME : make terrains bit-testable ? 
-	int on_ground = \
+	bool on_ground = \
 	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_obstacle || 
 		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_obstacle ||
 	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_platform || 
 		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_platform;
 
+	bool on_ladder = \
+	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity1+1) == terrain_ladder || 
+		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity1+1) == terrain_ladder ||
+	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_ladder || 
+		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_ladder;
+
+
 	// -- movement 
 		
-	// Left / Right
 	if (vga_frame%4==0) { 
+		// Horizontal movement
 		if (GAMEPAD_PRESSED(0,right)) {
 			if (spr->vx < 3) 
 				spr->vx++;
@@ -76,29 +85,47 @@ void move_player(struct Sprite *spr)
 			else if (spr->vx<0) 
 				spr->vx++;
 		}
+
+		// on a ladder ? Vertical movement
+		if ( on_ladder ) 
+		{
+			if (GAMEPAD_PRESSED(0,up)) {
+				if (spr->vy>-3)
+					spr->vy--;
+			} else if (GAMEPAD_PRESSED(0,down)) {
+				if (spr->vy<3)
+					spr->vy++;
+			} else {
+				// decelerate
+				if (spr->vy>0) 
+					spr->vy--;
+				else if (spr->vy<0)
+					spr->vy++;
+			}
+		} else {
+			// Gravity
+			spr->vy +=1; 
+			if (spr->vy>4) 
+				spr->vy=4;
+		}
 	}
 
 
 
 	// Jump 
-	if (gamepad_pressed & gamepad_A ) {
-		if (on_ground) {
-			play_sfx(sfx_jump); // play ! // TODO add in ref
+	if ( gamepad_pressed & gamepad_A ) {
+		if (on_ground || on_ladder ) {
+			play_sfx(sfx_jump); 
 			spr->vy = -6;
 			njumps=NJUMPS; // TODO add to leveldef
 		} else if (njumps) {
-			play_sfx(sfx_jump); // play ! // TODO add in ref
+			play_sfx(sfx_jump); 
 			spr->vy = -6;
 			njumps--;
 		}
 	}
 
-	// Gravity
-	if (vga_frame%4==0) {	
-		spr->vy +=1; 
-		if (spr->vy>4) 
-			spr->vy=4;
-	}
+
 
 	// can move vertically / horizontally ? if not, revert (independently)
 
@@ -121,20 +148,20 @@ void move_player(struct Sprite *spr)
 	}
 
 	if (spr->vy >0 ) {
-		// would touch down ? obstacle or platform (also uses hity2) 
+		// would touch down ? (also uses hity2) obstacle or platform or ladder
 		// TODO player can hang within platform
 		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity2 );
 		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity2 );
 
-		if (  t_left!=terrain_obstacle && 
+		if ( 
+			  t_left  != terrain_obstacle && 
 			  t_right != terrain_obstacle && 
 
-			  t_left!=terrain_platform && 
+			  t_left  != terrain_platform && 
 			  t_right != terrain_platform 
-			  ) 
-		{
+  	    ) {
 			spr->y += spr->vy;
-		} else {
+		} else if ( !on_ground && !on_ladder ) {
 			spr->vy /= 2;
 		}
 	} else {
@@ -151,6 +178,7 @@ void move_player(struct Sprite *spr)
 
 
 	// -- animation
+
 	if (on_ground) {		
 		// animate LR walking frame even if cannot move
 		if ((gamepad_buttons[0] & (gamepad_left|gamepad_right))) {
@@ -159,6 +187,15 @@ void move_player(struct Sprite *spr)
 					spr->frame=0;
 				else 
 					spr->frame++;
+			}
+		} else {
+			spr->frame=0;
+		}
+	} else if (on_ladder) {
+		if (spr->vy) {
+			spr->frame=5; // ladder
+			if (vga_frame%8==0) {
+				spr->hflip = spr->hflip ? 0 : 1;
 			}
 		} else {
 			spr->frame=0;
@@ -180,7 +217,7 @@ void move_player(struct Sprite *spr)
 	if (terrain==terrain_kill) 
 		player_kill();
 
-	// -- display game info 
+	// -- display debug game info 
 	if (vga_frame%32==0) {	
 		message("player (%d,%d) cam (%d,%d) tile %x",spr->x,spr->y,camera_x%16,camera_y, terrain);
 		switch (terrain)
