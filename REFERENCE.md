@@ -2,6 +2,13 @@
 
 Elements with no id are not implemented yet.
 
+In a given position, the pixels can represent :
+
+ - a color (transparent being color 240)
+ - a number (0-255 or 0xFF, the number of the color in the palette, 0 being black and 255 white)
+ - a reference to a tile : the number of the color is the number of the tile from left to right, top to bottom. note that the place of the color in the palette arranged in a 16x16 grid is the same as the position of the tile in the main area.
+ - a 2D field. The pixel color is placed in X,Y position on the palette, black being (0,0) and white being (15,15) by example.
+
 ### levels 
 
 description of the level : each id is an index on the level description bytes
