@@ -20,9 +20,6 @@ uint8_t data[256*256];
 
 int camera_x, camera_y; // vertical position of the title/scroll
 
-// sprites on screen
-
-
 void (*frame_handler)( void ); 
 
 static const uint8_t sines[64] = {

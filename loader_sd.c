@@ -106,8 +106,6 @@ int  load_bmp(const char *filename)
 	strcat(full_path,filename);
 
 	// mount drive
-
-
 	res=f_open (&file,full_path, FA_READ);
 	if (res!=FR_OK){
 		message("could not open file %s : error %x \n",filename,res);
