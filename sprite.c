@@ -64,12 +64,17 @@ uint8_t collision_tile(const struct Sprite *spr)
 void interpret_spritetypes()
 {	
 	for (int id=0;id<NB_SPRITETYPES;id++) { // TODO 16 x 2columns
-		struct SpriteType *spt = &sprtype[id];
-		spt->color     = get_property(4+id,0);
-		
-		spt->movement  = get_property(4+id,1);
-		spt->collision = get_property(4+id,2);
-		spt->spawn     = get_property(4+id,3); 
+		struct SpriteType *spt = &sprtype[id];	
+
+		// type of player is read from level , not objects
+		if (id==0) {
+			spt->color  = get_property(level,1); 
+		} else {
+			spt->color     = get_property(4+id,0); 
+			spt->movement  = get_property(4+id,1);
+			spt->collision = get_property(4+id,2);
+			spt->spawn     = get_property(4+id,3); 
+		}
 
 		if (spt->color == TRANSPARENT) {			
 			message ("    spritetype %d undefined\n",id);
