@@ -286,19 +286,6 @@ void reset_level_data()
 	coins=0;
 }
 
-void player_kill()
-{
-	frame_handler = frame_die;
-	stop_song();
-	play_sfx(sfx_kill); 
-
-	sprite[0].vy = -6;
-	vga_frame=0;
-	lives--;
-	sprite[0].frame = 4;
-
-}
-
 void frame_die()
 {
 	// player movement

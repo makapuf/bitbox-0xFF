@@ -28,6 +28,7 @@ void player_reset()
 	sprite[0].y=0;
 	sprite[0].frame=0;
 	sprite[0].type =0;
+	sprite[0].val=0;
 }
 
 
@@ -92,9 +93,13 @@ void move_player(struct Sprite *spr)
 			if (GAMEPAD_PRESSED(0,up)) {
 				if (spr->vy>-3)
 					spr->vy--;
+				else 
+					spr->vy=-3;
 			} else if (GAMEPAD_PRESSED(0,down)) {
 				if (spr->vy<3)
 					spr->vy++;
+				else
+					spr->vy=3;
 			} else {
 				// decelerate
 				if (spr->vy>0) 
@@ -256,3 +261,16 @@ void move_camera(void)
 	if (camera_y>level_y2*256-VGA_V_PIXELS+256) camera_y=level_y2*256-VGA_V_PIXELS+256;
 }
 
+
+void player_kill()
+{
+	frame_handler = frame_die;
+	stop_song();
+	play_sfx(sfx_kill); 
+
+	sprite[0].vy = -6;
+	vga_frame=0;
+	lives--;
+	sprite[0].frame = 4;
+
+}
