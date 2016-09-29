@@ -162,6 +162,7 @@ struct Sprite *spawn_sprite(uint8_t type, int x, int y)
 
 	sprite[pos].type = type;
 	sprite[pos].frame = 0;
+	sprite[pos].val = 0;
 	sprite[pos].x  = x;  sprite[pos].y  = y;
 	sprite[pos].vx = 0;  sprite[pos].vy = 0;
 	sprite[pos].tx = 255; sprite[pos].ty=255;
@@ -230,6 +231,15 @@ void sprite_move(struct Sprite *spr)
 				}
 			}
 			break;
+
+		// a few frames and disappear, going up
+		case mov_singleup8 : 
+			spr->val++; // value=frame
+			spr->y-=2;
+			if (spr->val>30)
+				sprite_kill(spr);
+			break;
+
 
 		// 1 frame, going up and down
 		case mov_throbbing : 

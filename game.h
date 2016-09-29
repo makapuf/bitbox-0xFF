@@ -29,7 +29,7 @@
 // -----------------------------------
 
 struct Sprite {
-	int32_t  x,y; // pos 
+	int32_t  x,y;  // pos 
 	int     vx,vy; // speed
 	uint8_t hflip; // h flip. not always linked to vx
 
@@ -39,6 +39,7 @@ struct Sprite {
 	uint8_t type;  // TRANSPARENT meaning undefined sprite, else type id 0-31
 
 	uint8_t tx,ty; // original position on level in tiles (absolute), 0,0 means none
+	uint8_t val;   // dummy value for internal state
 };
 
 struct SpriteType {
@@ -149,9 +150,3 @@ inline uint8_t get_terrain (const uint8_t tile_id)
 }
 
 
-inline int is_walkable(uint8_t terrain) {
-	return terrain == terrain_obstacle || 
-		   terrain == terrain_ice || 
-		   terrain == terrain_ladder || 
-		   terrain == terrain_platform;
-}
