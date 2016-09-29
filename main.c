@@ -98,22 +98,23 @@ void get_level_boundingbox(void)
 // Set level start position as color white, replace with tile 0.
 void get_level_start()
 {
-	for (int j=level_y1*16;j<level_y2*16;j++)
-		for (int i=level_x1*16;i<level_x2*16;i++) {
+	for (int j=level_y1*16;j<level_y2*16+15;j++) 
+		for (int i=level_x1*16;i<level_x2*16+15;i++) 
+		{
 			if (data[j*256+i]==get_property(level,1)) {
 				// move player
 				sprite[0].x=i*16;
 				sprite[0].y=j*16;
 
-				data[j*256+i]=0; // TODO replace with nearest empty terrain 
+				data[j*256+i]=data[j*256+i-256]; // replace with upper one. If was an object, already replaced
 				message("starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
 				return;
 			}
 		}
 	// Not found, set default position on top left of level
-	message("using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
 	sprite[0].x=level_x1*16;
 	sprite[0].y=level_y1*16;
+	message("level start not found, using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
 }
 
 
@@ -173,7 +174,7 @@ void manage_sprites( void )
 								goto done;
 							}
 						}
-					*c=0; // in doubt, set to zero
+					*c=*(c-256); // in doubt, set to upper one
 
 					done: 
 					break; // found sprite color in index, done
