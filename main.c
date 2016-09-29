@@ -164,11 +164,19 @@ void manage_sprites( void )
 					spr->ty = camera_y/16+j;
 					modified=1;	// will display sth on console
 					
-					*c=0; 
-					// TODO replace with nearest empty
-					// TODO : remember init position sur pos vide & type in array of elts 32x(u8 x,y,type), when pos not visible, re-place in tilemap - pas nec tt d'un coup : scanne 1/4 à la fois ? 
+					// modify tilemap with nearest empty (assumes at least one nearby)
+					for (int dx=-1;dx<1;dx++)
+						for (int dy=-1;dy<1;dy++) {
+							uint8_t d=*(c+dx+dy*256);
+							if (get_terrain(d)==terrain_empty) { // near one is an empty ? use it
+								*c=d;
+								goto done;
+							}
+						}
+					*c=0; // in doubt, set to zero
 
-					break;
+					done: 
+					break; // found sprite color in index, done
 				}
 		}
 
