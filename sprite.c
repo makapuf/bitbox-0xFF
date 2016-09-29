@@ -183,6 +183,18 @@ void sprite_kill(struct Sprite *spr)
 	spr->type+=SPRITE_INACTIVE; // remove : set inactive (type) but not unloaded
 }
 
+static inline int is_walkable(uint8_t terrain) {
+	return terrain == terrain_obstacle || 
+		   terrain == terrain_ice || 
+		   terrain == terrain_ladder || 
+		   terrain == terrain_platform;
+}
+
+static inline int is_blocking(uint8_t terrain) {
+	return terrain == terrain_obstacle || 
+		   terrain == terrain_ice ;
+}
+
 
 void sprite_move(struct Sprite *spr)
 {
@@ -271,7 +283,7 @@ void sprite_move(struct Sprite *spr)
 					spr->y++; 
 				spr->vx=1; // start going right
 			} else if ( // reverse if obstacle or over a hole
-				is_walkable ( terrain_at(
+				is_blocking ( terrain_at(
 					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1),
 					spr->y+spt->hity2
 					)) || 
