@@ -29,7 +29,8 @@ Player control type
 
 control | id | description / controls
 -----|----|----------------------
-classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile if several gained.
+classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile type if several gained.
+side | | player can control X and Y (no gravity for him) but always faces the same direction. nNo jumping/running. Autoscroll is given by alt speed
 hit |  | left/right ; B: run ; Y : hits enemies (horizontally) : 1 more frame for hitting
 modern | | can double/wall jump, stomp vertically on enemies (like hitting them)
 runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
@@ -37,8 +38,7 @@ runner | | always goes right at average speed, can jump, sometimes fire
 aim | | can go left+right, aims by 45 degrees increments 
 beatemup | | can jump on ladders, falls back where we are
 nojump | | cannot jump (nor run)
-side | | player can control X and Y but always faces right. No jumping/running. Slow right autoscroll. 
-down | | player can control X and Y but always faces up. No jumping/running. Slow up autoscroll.
+infjump | | player has infinite jump
 
 
 ### Terrains
@@ -70,7 +70,7 @@ Indices in object type definition bytes. 8 colors defined max.
  color |0| color to prepresent object on tilemap, as well as id of the top left of the first tile for the sprite frames. 230 (transparent) if this object type is undefined
  movement |1| type of movement (see object movements)
  collision |2| type of collision - sprite_collide (see object collisions table)
- spawn | 3 | type of sprite spawned when this object dies
+ spawn | 3 | type of sprite spawned when this object dies (0-15) TODO COLOR ! 
  alt_collision | | alt collision type (does not influence respawning)
  alt_collision_when | | condition where alt collision is triggered (never, top, bottom, all except top, all except bottom, when punched/kicked, when punched but only up or down ... )
 
@@ -89,7 +89,8 @@ alternate4 | 103 | (purple) no move, just cycling 4 frames each 16 frames
 throbbing | 25 | (bright green) static going up and down one pixel (to be better seen). 1 frame.
 singleanim4 | 107 | (grey) 4 frames animation then destroy sprite
 singleanim2 | 75 | (blueish grey) 2 frames animation then destroy sprite
-flybounce | 11 | flies but bounces on walls. state : current speed vector
+singleup8 | 128 | goes up slowly for a moment then disappear, 1 frame
+flybounce | 11 | flies 45° (starts up/left) but bounces on walls. state : current speed vector
 walk | 3 | subject to gravity, walks and reverse direction if obstacle or holes. 2 frames
 bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
 bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
@@ -97,12 +98,18 @@ walkfall |  | subject to gravity, left and right if obstacle, falls in holes. 2 
 leftrightjump |  | jumps from time to time. 2 frames 
 sticky |  | walks on borders of blocking sprites, will go around edges cw. 2frames
 vsine4 |  | vertical sine, 4 tiles height. 2frames alternating every 16frames
+bouncing | | bounces with gravity on the ground, 4 tiles high
 bulletD |  | flies, not stopped by blocks, no gravity, goes down. 2frames
 bulletLv2 | 11 | flies, a bit faster than preceding
 bulletRv2 |  | flies, a bit faster than preceding
 generator |  | does not move, generates each ~2 seconds enemy with id just after this one. 2fr 
 ladder |  | stays on ladders. right to left, go back to right if finds border. 1 frame alternating
 player | 255 | (white) implied for first object (??)
+walkdouble | | walk but is 2x the size of its pixels (actually rendered differently)
+minibulletL | | 4 mini tiles per tile. fly horizontally, die on walls 
+minibulletLD | | 4 mini tiles per tile. fly oblique, die on walls 
+
+
 
 ### Collisions
 
@@ -115,11 +122,11 @@ kill | 240 | red (==terrain_kill) kills player instantly - respawns
 killnorespawn | 237 | kills player instantly
 block | 104| (=terrain obstacle) blocks the player - can push it
 coin | 249 | yellow, gives a coin - or Nb =next ? , 50 of them gives a life
-life | 25 | green, gives a life and disappear with explosion animation 
+life | 25 | green, gives a life 
 key |  137 | gives a key
 end | 255| ends level 
 switch | | transform next object in list into its next object (ex. if object in pos 3, objects 4 get transformed in objects 5 and reciprocally)
-3keys | | switch (next types...) only if you've got 3 keys
+three_keys | | switch (next types...) only if you've got 3 keys - removes them
 fire | | allows firing of projectile of type defined just after
 restart | | the object dies once touched. the player will respawn here once touched.
 
@@ -132,7 +139,7 @@ Projectile types are similar to object types (and are defined in the same space)
 --------- | --------- | -------
  color |0| id of the 4 frame-8x8 mini sprites tile
  movement |1| type of movement (see object movements)
- collision |2| type of collision - sprite_collide (see object collisions table) - projectiles collide only with objects
+ collision | | type of collision : projectiles collide only with objects. take object value
  spawn | 3 | type of sprite spawned when this object dies - or TRANSPARENT
 
 ### SFX definitions
@@ -150,6 +157,7 @@ switch | 7 | switch activated
 destroy1 | 8 | object destroyed 1
 destroy2 | 9 | object destroyed 2
 hit | 10 | player hits enemy 
+unlock | 11 | when 3keys gets unlocked
 
 ## Black mapper 
 
