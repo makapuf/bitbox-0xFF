@@ -116,6 +116,60 @@ In fact, the 4 first "objects" define the level-specific constants, and then the
 
 See the [reference](https://github.com/makapuf/bitbox-0xFF/blob/master/REFERENCE.md#object-types) for complete documentation.
 
+# Sound
+
+0xFF will let you define background music (one song per level), and some special effects for several actions (global to the game), of course using pixels and tiles.
+
+## Music 
+
+All musics are defined by a tile with a fixed position just at the right of intro tilemaps.
+
+Each level has its own track. This tile is thus defined by 4 songs, each made of a group of 4 lines, so 4x4=16 lines=1 tile.
+
+Each song will be played as 4 tracks, each with a fixed "instrument"/synth preset. 
+
+The 4 lines defining a song shold be read left to right, top to bottm : 
+
+    aaaabbbbccccdddd
+    Seeeeeeeeeeeeeee
+    ffffffffffffffff
+    gggggggggggggggg
+    
+ - aaaa, bbbb, cccc, dddd are 4 instrument defs (one per track), 4 pixels each.
+ - S is the speed fo the song to be played (Speed of song in 1/60 frames per tick)
+ - eeee...eeeefff....ffffgggg....gggg is one sequence of 48 pattern refs. A pattern ref is a reference to a pattern tile (or pink transparent if empty).
+
+### Pattern tiles
+
+A pattern tile is divided in 4 groups of 4 lines. 
+
+ - Lines 0-3 will be used for level 0
+ - Lines 4-7   for level 1
+ - Lines 8-11  for level 2 
+ - Lines 12-15 for level 3
+
+For a given level, each of the 4 lines represents notes, one line per channel/instrument and each pixel is a note. (16 ticks per pattern). 
+
+By example, line 6 will be the second track when player plays this pattern in level 2.
+
+Notes are defined as 2D field : Y/2 from the bottom is the octave and X is the note from C, C#, D, ..., E
+Only use even Y for octaves. 
+
+    Cheat : You can use odd y, which means same octave as with even ones but *next instrument* 
+
+## SFX
+
+SFX are sounds triggered by actions (jumping, killing an enemy, losing a life ..) in your game. They will play in parallel of your song (replacing the 3rd voice out of 4).
+
+There are 16 SFX defined in a single tile, with one line per SFX. The correspondence SFXid->action is in the Reference.
+
+An SFX line is generally defined as : 
+ - Instrument definition (like in song)
+ - Speed of play (to play very quickly, set it to zero).
+ - N notes to play the SFX to the end of line. Silence is pink transparent.
+
+
+
 
 # HUD
 The HUD is used to present to the user the current status : level of lives, score and keys. Letters are encoded as 8x8 minitiles (4 in a tile). They are specified as 5 tiles (20 minitiles) on the bottom of the image, see the examples.
@@ -176,14 +230,3 @@ Fixed tiles encode several regions of the screen, by defining borders and main r
 
 
 The 16 versatile tiles can have sky, kill or blocking behaviors, as well as many other special ones as will be shown after (ice, trampoline, ...).
-
-# Music and SFX
-
-Music will be encoded also as tiles. We will be using the chiptune engine of the bitbox but encoded as colors. The chiptune engine is based on LFT as ported by @pulkomandy and mostly works with macros : instruments are macros to trigger voices oscillators and then patterns encode notes.
-
-###Instruments
-Your game will encode instruments in a tile, with 16 instruments of 16 macro steps. They will also serve as SFX definitions.
-### Patterns 
-A pattern is 16 steps like a mini piano roll
-### Songs 
-Whole songs can be specified by level. A song references a list of patterns by its pixel to tile mapping. A tile on the right of the pixel can be used to define a 
