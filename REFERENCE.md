@@ -138,7 +138,7 @@ Projectile types are similar to object types (and are defined in the same space)
 ### SFX definitions
 
 sfx | id | description
---- | ----
+--- | ---- | -----
 kill | 0 | player killed
 jump | 1 | player jumps
 fire| 2 | player fires projectile
