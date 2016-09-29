@@ -289,7 +289,7 @@ void sprite_collide_player(struct Sprite *spr)
 			// adds coin, small sfx + animations, remove
 			coins += 1;
 			sprite_kill(spr);
-			play_sfx(2); // TODO defs.h
+			play_sfx(sfx_coin); 
 
 		
 			break;
@@ -301,6 +301,7 @@ void sprite_collide_player(struct Sprite *spr)
 		case col_end : 
 			level += 1;
 			enter_level();
+			play_sfx(sfx_level);
 			// TODO small animation (like kill but happy) ?
 			break; 
 

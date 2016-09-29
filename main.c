@@ -284,7 +284,7 @@ void player_kill()
 {
 	frame_handler = frame_die;
 	stop_song();
-	play_sfx(1); // TODO : defs.h
+	play_sfx(sfx_kill); 
 
 	sprite[0].vy = -6;
 	vga_frame=0;

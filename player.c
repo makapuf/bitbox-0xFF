@@ -83,11 +83,11 @@ void move_player(struct Sprite *spr)
 	// Jump 
 	if (gamepad_pressed & gamepad_A ) {
 		if (on_ground) {
-			play_sfx(0); // play ! // TODO add in ref
+			play_sfx(sfx_jump); // play ! // TODO add in ref
 			spr->vy = -6;
 			njumps=NJUMPS; // TODO add to leveldef
 		} else if (njumps) {
-			play_sfx(0); // play ! // TODO add in ref
+			play_sfx(sfx_jump); // play ! // TODO add in ref
 			spr->vy = -6;
 			njumps--;
 		}
