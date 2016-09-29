@@ -16,8 +16,8 @@
 
 #define TRANSPARENT 230 
 #define HITBOX_COLOR 25
-#define MAX_SPRITES 32 // max onscreen, can be many more per level
-#define NB_SPRITETYPES 16 // 2x16 for whole game
+#define MAX_SPRITES 64 // max onscreen, can be many more per level
+#define NB_SPRITETYPES 16-4 // TODO 2x16 for whole game
 
 #define START_LIVES 5
 
