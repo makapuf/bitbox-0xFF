@@ -176,7 +176,7 @@ void leveltitle_line8(void)
 	} else {
 		for (int tile=0;tile<8;tile++) {
 			// read tilemap
-			uint8_t tile_id = data[ (8+level/2+abs_y/16+TILE_TITLE_Y*16)*IMAGE_WIDTH + tile + TILE_TITLE_X*16+(level%2)*8];
+			uint8_t tile_id = data[ (8+(level/2)*4+abs_y/16+TILE_TITLE_Y*16)*IMAGE_WIDTH + tile + TILE_TITLE_X*16+(level%2)*8];
 			memcpy(LEVELTITLE_OFS_X + draw8 + tile*16 ,
 			      &data[((tile_id/16)*16 + abs_y%16 )*IMAGE_WIDTH +  // tile line + line ofs			 
 			      (tile_id%16)*16]  // tile column
