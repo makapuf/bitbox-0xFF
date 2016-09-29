@@ -23,7 +23,7 @@ altmaxspeed   |   | running / jumping X/Y max speed as a 2D vector pixel. depend
 
 2D vector pixels are taken from X/Y position of color on the palette, e.g. color 81 = 5*16+1 -> x=1,y=5
 
-### control types
+### Control types
 
 Player control type
 
@@ -135,6 +135,23 @@ Projectile types are similar to object types (and are defined in the same space)
  collision |2| type of collision - sprite_collide (see object collisions table) - projectiles collide only with objects
  spawn | 3 | type of sprite spawned when this object dies - or TRANSPARENT
 
+### SFX definitions
+
+sfx | id | description
+--- | ----
+kill | 0 | player killed
+jump | 1 | player jumps
+fire| 2 | player fires projectile
+level | 3 | end of level
+coin | 4 | +1 coin
+key |5 | +1 key
+life | 6 | +1 life
+switch | 7 | switch activated
+destroy1 | 8 | object destroyed 1
+destroy2 | 9 | object destroyed 2
+hit | 10 | player hits enemy 
+
+## Black mapper 
 
 ### Black Mapper Terrain types 
 
