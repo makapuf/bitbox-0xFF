@@ -29,8 +29,8 @@
 // -----------------------------------
 
 struct Sprite {
-	int32_t  x,y;  // pos 
-	int     vx,vy; // speed
+	int32_t  x,y;  // pos * 256 
+	int     vx,vy; // speed (as dx/dy per frame) 
 	uint8_t hflip; // h flip. not always linked to vx
 
 	uint8_t frame; // in animation
@@ -130,7 +130,7 @@ void black_mapper(void);
 // ----------------------------------
 
 
-// read pixel at x,y in tile number X
+// read pixel at x,y (in PIXELS) in tile number X
 inline uint8_t read_tile(const uint8_t tile_id, const int x, const int y)
 {
 	return data[(tile_id/16*16+y)*256+(tile_id%16)*16 + x];

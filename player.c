@@ -4,11 +4,23 @@
 
 #include "game.h"
 
-#define NJUMPS 0; // 2 for triple jumps, 0 for single ones
+#define NJUMPS 1 // 2 for double jumps, 1 for single ones, 0 for none
+#define SPEED_JUMP 2000 // negative speed in 1/256th pixels per frame
+
+#define ACCEL_X 50
+#define MAX_SPEED_X 500
+
+#define ACCEL_Y 70
+#define MAX_SPEED_Y 500
+
+#define ACCEL_FALL 100
+#define MAX_SPEED_FALL 1000
+
+
 int njumps; // current value for double/triple jumps
 
 
-// get the terrain type located at pixel in level position x,y
+// get the terrain type located at _pixel_ in level position x,y
 inline uint8_t terrain_at(int x, int y)
 {
 	//message("%d,%d %d==%d\n",x/256,x,get_terrain(y/256*16+x/256),level_color);
@@ -18,7 +30,6 @@ inline uint8_t terrain_at(int x, int y)
 	const uint8_t tile_id = data[y/16*256+x/16]; // read tile_id from level
 	return get_terrain(tile_id);
 }
-
 
 
 void player_reset()
@@ -56,76 +67,70 @@ void move_player(struct Sprite *spr)
 	struct SpriteType *spt = &sprtype[spr->type];
 
 	// FIXME : make terrains bit-testable ? 
+	const int sx=spr->x/256;
+	const int sy=spr->y/256;
+
 	bool on_ground = \
-	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_obstacle || 
-		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_obstacle ||
-	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_platform || 
-		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_platform;
+	    terrain_at(sx+spt->hitx1,sy+spt->hity2+1) == terrain_obstacle || 
+		terrain_at(sx+spt->hitx2,sy+spt->hity2+1) == terrain_obstacle ||
+	    terrain_at(sx+spt->hitx1,sy+spt->hity2+1) == terrain_platform || 
+		terrain_at(sx+spt->hitx2,sy+spt->hity2+1) == terrain_platform;
 
 	bool on_ladder = \
-	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity1+1) == terrain_ladder || 
-		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity1+1) == terrain_ladder ||
-	    terrain_at(spr->x+spt->hitx1,spr->y+spt->hity2+1) == terrain_ladder || 
-		terrain_at(spr->x+spt->hitx2,spr->y+spt->hity2+1) == terrain_ladder;
+	    terrain_at(sx+spt->hitx1,sy+spt->hity1+1) == terrain_ladder || 
+		terrain_at(sx+spt->hitx2,sy+spt->hity1+1) == terrain_ladder ||
+	    terrain_at(sx+spt->hitx1,sy+spt->hity2+1) == terrain_ladder || 
+		terrain_at(sx+spt->hitx2,sy+spt->hity2+1) == terrain_ladder;
 
 
 	// -- movement 
 		
-	if (vga_frame%4==0) { 
-		// Horizontal movement
-		if (GAMEPAD_PRESSED(0,right)) {
-			if (spr->vx < 3) 
-				spr->vx++;
-		} else if (GAMEPAD_PRESSED(0,left)) {
-			if (spr->vx >-3) 
-				spr->vx--;
-		} else {
-			// decelerate 
-			if (spr->vx>0) 
-				spr->vx--;
-			else if (spr->vx<0) 
-				spr->vx++;
-		}
+	// Horizontal movement
+	if (GAMEPAD_PRESSED(0,right)) {
+		spr->vx += ACCEL_X;
+		if (spr->vx > MAX_SPEED_X) 
+			spr->vx = MAX_SPEED_X;
 
-		// on a ladder ? Vertical movement
-		if ( on_ladder ) 
-		{
-			if (GAMEPAD_PRESSED(0,up)) {
-				if (spr->vy>-3)
-					spr->vy--;
-				else 
-					spr->vy=-3;
-			} else if (GAMEPAD_PRESSED(0,down)) {
-				if (spr->vy<3)
-					spr->vy++;
-				else
-					spr->vy=3;
-			} else {
-				// decelerate
-				if (spr->vy>0) 
-					spr->vy--;
-				else if (spr->vy<0)
-					spr->vy++;
-			}
-		} else {
-			// Gravity
-			spr->vy +=1; 
-			if (spr->vy>4) 
-				spr->vy=4;
-		}
+	} else if (GAMEPAD_PRESSED(0,left)) {
+		spr->vx-=ACCEL_X;
+		if (spr->vx <-MAX_SPEED_X) spr->vx = -MAX_SPEED_X;
+	} else {
+		// decelerate 
+		spr->vx-=ACCEL_X;
+		if (spr->vx<0) spr->vx = 0;
 	}
 
+	// on a ladder ? Vertical movement
+	if ( on_ladder ) 
+	{
+		if (GAMEPAD_PRESSED(0,up)) {
+			spr->vy-=ACCEL_Y;
+			if (spr->vy<-MAX_SPEED_Y) spr->vy=-MAX_SPEED_Y;
+		} else if (GAMEPAD_PRESSED(0,down)) {
+			spr->vy+=ACCEL_Y;
+			if (spr->vy>MAX_SPEED_Y) spr->vy=MAX_SPEED_Y;
+		} else {
+			// decelerate
+			spr->vy-=ACCEL_Y;
+			if (spr->vy<0) spr->vy=0;
+		}
+	} else {
+		// Gravity
+		spr->vy += ACCEL_FALL; 
+		if (spr->vy>MAX_SPEED_FALL) 
+			spr->vy=MAX_SPEED_FALL;
+	}
 
 
 	// Jump 
 	if ( gamepad_pressed & gamepad_A ) {
-		if (on_ground || on_ladder ) {
+		if (NJUMPS && (on_ground || on_ladder) ) {
 			play_sfx(sfx_jump); 
-			spr->vy = -6;
-			njumps=NJUMPS; // TODO add to leveldef
+			spr->vy = -SPEED_JUMP;
+			njumps=NJUMPS-1; // TODO add to leveldef
 		} else if (njumps) {
 			play_sfx(sfx_jump); 
-			spr->vy = -6;
+			spr->vy = -SPEED_JUMP;
 			njumps--;
 		}
 	}
@@ -139,24 +144,24 @@ void move_player(struct Sprite *spr)
 
 	// test moving horizontally 	
 	if (terrain_at( // test top collision
-			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
-			spr->y + spt->hity1
+			(spr->x + spr->vx)/256 + (spr->vx>0 ? spt->hitx2:spt->hitx1),
+			spr->y/256 + spt->hity1
 		) != terrain_obstacle  &&
 		terrain_at( // test bottom collision
-			spr->x + spr->vx + (spr->vx>0 ? spt->hitx2:spt->hitx1),
-			spr->y+spt->hity2
+			(spr->x + spr->vx)/256 + (spr->vx>0 ? spt->hitx2:spt->hitx1),
+			spr->y/256 +spt->hity2
 			) != terrain_obstacle
 		) {
 		spr->x += spr->vx;
 	} else {
-		spr->vx /= 2;
+		spr->vx /= 2; 
 	}
 
 	if (spr->vy >0 ) {
 		// would touch down ? (also uses hity2) obstacle or platform or ladder
 		// TODO player can hang within platform
-		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity2 );
-		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity2 );
+		uint8_t t_left =terrain_at( spr->x/256+spt->hitx1, (spr->y+spr->vy)/256 + spt->hity2 );
+		uint8_t t_right=terrain_at( spr->x/256+spt->hitx2, (spr->y+spr->vy)/256 + spt->hity2 );
 
 		if ( 
 			  t_left  != terrain_obstacle && 
@@ -171,8 +176,8 @@ void move_player(struct Sprite *spr)
 		}
 	} else {
 		// would touch up ? - obstacle only , uses hity1
-		uint8_t t_left =terrain_at( spr->x+spt->hitx1, spr->y+spr->vy + spt->hity1 );
-		uint8_t t_right=terrain_at( spr->x+spt->hitx2, spr->y+spr->vy + spt->hity1 );
+		uint8_t t_left =terrain_at( spr->x/256+spt->hitx1, (spr->y+spr->vy)/256 + spt->hity1 );
+		uint8_t t_right=terrain_at( spr->x/256+spt->hitx2, (spr->y+spr->vy)/256 + spt->hity1 );
 
 		if (t_left!=terrain_obstacle && t_right != terrain_obstacle) {
 			spr->y += spr->vy;
@@ -223,8 +228,8 @@ void move_player(struct Sprite *spr)
 		player_kill();
 
 	// -- display debug game info 
-	if (vga_frame%32==0) {	
-		message("player (%d,%d) cam (%d,%d) tile %x",spr->x,spr->y,camera_x%16,camera_y, terrain);
+	if (vga_frame%32==0 || button_state() ) {	
+		message("player (%d,%d) spd (%d,%d) cam (%d,%d) tile %x",spr->x/256,spr->y/256,spr->vx, spr->vy,camera_x%16,camera_y, terrain);
 		switch (terrain)
 		{
 			case terrain_empty  : message(" empty"); break;
@@ -246,11 +251,11 @@ void move_camera(void)
 	const struct Sprite *spr = &sprite[0];
 
 
-	if (spr->x > camera_x + 200 ) camera_x = spr->x-200;
-	if (spr->x < camera_x + 100 ) camera_x = spr->x>100 ? spr->x-100 : 0;
+	if (spr->x/256 > camera_x + 200 ) camera_x = spr->x/256-200;
+	if (spr->x/256 < camera_x + 100 ) camera_x = spr->x/256>100 ? spr->x/256-100 : 0;
 
-	if (spr->y > camera_y + 150 ) camera_y = spr->y-150;
-	if (spr->y < camera_y + 50  ) camera_y = spr->y-50;
+	if (spr->y/256 > camera_y + 150 ) camera_y = spr->y/256-150;
+	if (spr->y/256 < camera_y + 50  ) camera_y = spr->y/256-50;
 
 	// check level limits
 
@@ -268,9 +273,8 @@ void player_kill()
 	stop_song();
 	play_sfx(sfx_kill); 
 
-	sprite[0].vy = -6;
+	sprite[0].vy = -SPEED_JUMP;
 	vga_frame=0;
 	lives--;
 	sprite[0].frame = 4;
-
 }

@@ -4,6 +4,11 @@
 
 #include "game.h"
 
+#define THROBBING_Y 256
+#define BULLET_SPEED 384
+#define WALK_SPEED 256
+#define RAISE_SPEED 512
+
 // --Sprites 
 struct Sprite sprite[MAX_SPRITES];
 struct SpriteType sprtype[NB_SPRITETYPES]; 
@@ -19,25 +24,25 @@ void sprites_reset()
 static inline int sprite_left(const struct Sprite *spr)
 {
 	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->x+spt->hitx1;
+	return spr->x/256+spt->hitx1;
 }
 
 static inline int sprite_right(const struct Sprite *spr)
 {
 	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->x+spt->hitx2;
+	return spr->x/256+spt->hitx2;
 }
 
 static inline int sprite_top(const struct Sprite *spr)
 {
 	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->y+spt->hity1;
+	return spr->y/256+spt->hity1;
 }
 
 static inline int sprite_bottom(const struct Sprite *spr)
 {
 	struct SpriteType *spt = &sprtype[spr->type];
-	return spr->y+spt->hity2;
+	return spr->y/256+spt->hity2;
 }
 
 
@@ -51,7 +56,7 @@ uint8_t collision_tile(const struct Sprite *spr)
 	// TODO in the level only !
 	// TODO check for larger sprites (while +16 until hitx2 ... )
 	// checks collision between tile and terrain. returns most interesting tile type
-	if (spr->y>=4096) return terrain_empty;
+	if (spr->y>=4096*256) return terrain_empty;
 	uint8_t t = terrain_at(sprite_left(spr),sprite_top(spr));
 
 	if (t==terrain_empty) t = terrain_at(sprite_right(spr),sprite_top(spr));
@@ -165,7 +170,8 @@ struct Sprite *spawn_sprite(uint8_t type, int x, int y)
 	sprite[pos].val = 0;
 	sprite[pos].x  = x;  sprite[pos].y  = y;
 	sprite[pos].vx = 0;  sprite[pos].vy = 0;
-	sprite[pos].tx = 255; sprite[pos].ty=255;
+	// spawn sprites do not have a source tile
+	sprite[pos].tx = 255; sprite[pos].ty=255; 
 
 	sprite[pos].hflip=0; 
 
@@ -247,7 +253,7 @@ void sprite_move(struct Sprite *spr)
 		// a few frames and disappear, going up
 		case mov_singleup8 : 
 			spr->val++; // value=frame
-			spr->y-=2;
+			spr->y-=RAISE_SPEED;
 			if (spr->val>30)
 				sprite_kill(spr);
 			break;
@@ -256,13 +262,13 @@ void sprite_move(struct Sprite *spr)
 		// 1 frame, going up and down
 		case mov_throbbing : 
 			if ((vga_frame%32)==0)
-				spr->y +=1;
+				spr->y += THROBBING_Y;
 			else if (vga_frame%32==16)
-				spr->y -=1;
+				spr->y -= THROBBING_Y;
 			break;
 
 		case mov_bulletL : // 1 frame, l to r
-			if (vga_frame%2==0) spr->x-=3;
+			spr->x-=BULLET_SPEED;
 			break;
 
 		case mov_bulletLv2 : 
@@ -270,7 +276,7 @@ void sprite_move(struct Sprite *spr)
 			break;
 
 		case mov_bulletR : // 1 frame, l to r
-			if (vga_frame%2==0) spr->x+=3;
+			spr->x+=BULLET_SPEED;
 			spr->hflip=1;
 			break;
 
@@ -279,17 +285,20 @@ void sprite_move(struct Sprite *spr)
 			spr->frame = (vga_frame/16)%2; // alternate 2 frames
 			if (spr->vx==0) { // start -> TODO move to spawn (or even make it oop)
 				// drop to floor
-				while (terrain_at(spr->x+spt->hitx1, spr->y+spt->hity2+1)==terrain_empty) 
-					spr->y++; 
-				spr->vx=1; // start going right
-			} else if ( // reverse if obstacle or over a hole
+				while (
+					terrain_at(spr->x/256+spt->hitx1, spr->y/256+spt->hity2+1)==terrain_empty
+					) 
+					spr->y+=256; 
+				spr->vx=WALK_SPEED; // start going right
+			} else if ( 
+				// reverse if obstacle or over a hole
 				is_blocking ( terrain_at(
-					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1),
-					spr->y+spt->hity2
+					(spr->x+spr->vx)/256+(spr->vx>0?spt->hitx2:spt->hitx1),
+					spr->y/256+spt->hity2
 					)) || 
 				!is_walkable( terrain_at(
-					spr->x+spr->vx+(spr->vx>0?spt->hitx2:spt->hitx1), 
-					spr->y+spt->hity2+1)
+					(spr->x+spr->vx)/256+(spr->vx>0?spt->hitx2:spt->hitx1), 
+					spr->y/256+spt->hity2+1)
 				) 
 			) {
 				spr->vx = -spr->vx;
@@ -317,7 +326,6 @@ void sprite_collide_player(struct Sprite *spr)
 			coins += 1;
 			sprite_kill(spr);
 			play_sfx(sfx_coin); 
-
 		
 			break;
 

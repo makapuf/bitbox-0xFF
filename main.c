@@ -100,17 +100,17 @@ void get_level_start()
 		{
 			if (data[j*256+i]==get_property(level,1)) {
 				// move player
-				sprite[0].x=i*16;
-				sprite[0].y=j*16;
+				sprite[0].x=i*16*256;
+				sprite[0].y=j*16*256;
 
 				data[j*256+i]=data[j*256+i-256]; // replace with upper one. If was an object, already replaced
-				message("starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
+				message("starting position : (%d,%d)\n",sprite[0].x/256,sprite[0].y/256);
 				return;
 			}
 		}
 	// Not found, set default position on top left of level
-	sprite[0].x=level_x1*16;
-	sprite[0].y=level_y1*16;
+	sprite[0].x=level_x1*16*256;
+	sprite[0].y=level_y1*16*256;
 	message("level start not found, using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
 }
 
@@ -123,8 +123,13 @@ void manage_sprites( void )
 	// first unload offscreen sprites ( put them back on tilemap)
 	for (int i=1;i<MAX_SPRITES;i++) { // 0 is the player :)
 		if (sprite[i].type == SPRITE_FREE ) continue;
-		else if (sprite[i].x - camera_x + sprtype[sprite[i].type].w < -32 || sprite[i].x-camera_x > VGA_H_PIXELS+32) {
-			message("Hiding sprite %d (%d,%d) of type %d outside of screen\n",i,sprite[i].x, sprite[i].y, sprite[i].type);
+		else if (
+			sprite[i].x/256 - camera_x + sprtype[sprite[i].type].w < -32 || 
+			sprite[i].x/256 - camera_x > VGA_H_PIXELS+32 || 
+			sprite[i].y/256 - camera_y + sprtype[sprite[i].type].h < -32 || 
+			sprite[i].y/256 - camera_y > VGA_V_PIXELS+32 
+			) {
+			message("Hiding sprite %d (%d,%d) of type %d outside of screen\n",i,sprite[i].x/256, sprite[i].y/256, sprite[i].type);
 
 
 			if (data[sprite[i].tx!=255 || sprite[i].ty!=255]) {
@@ -137,7 +142,7 @@ void manage_sprites( void )
 					respawn = (typ == col_none || typ==col_kill);
 				}
 				
-				// get type color &put back on tilemap if respawn
+				// get type color & put back on tilemap if respawn
 				if (respawn) 
 					data[sprite[i].ty*256+sprite[i].tx] = get_property(typ+4,property_color); 
 			}
@@ -155,7 +160,10 @@ void manage_sprites( void )
 			uint8_t *c = &data[(camera_y/16+j)*256+camera_x/16+i]; // tile id
 			for (int spt=0;spt<NB_SPRITETYPES;spt++)
 				if (*c==sprtype[spt].color && *c != TRANSPARENT) {
-					struct Sprite *spr = spawn_sprite(spt, (camera_x/16)*16 + i*16, (camera_y/16)*16 + j*16);
+					struct Sprite *spr = spawn_sprite(spt, 
+						(camera_x/16+i)*16*256, 
+						(camera_y/16+j)*16*256
+						);
 
 					// put where we found it in 
 					spr->tx = camera_x/16+i;

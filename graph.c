@@ -67,19 +67,19 @@ void screen_line8(void)
 
 		struct SpriteType *spt=&sprtype[spr->type];
 
-		if ( abs_y >= spr->y  && \
-			 abs_y <  spr->y + spt->h)
+		if ( abs_y >= spr->y/256  && \
+			 abs_y <  spr->y/256 + spt->h)
 		{
-			int start = spr->x-camera_x>=0 ? 0:camera_x-spr->x;
-			int end = spr->x+spt->w-camera_x<320 ? spt->w : 320+camera_x-spr->x;
+			int start = spr->x/256-camera_x>=0 ? 0:camera_x-spr->x/256;
+			int end = spr->x/256+spt->w-camera_x<320 ? spt->w : 320+camera_x-spr->x/256;
 			// TODO start / end are frame-based, avoid recompute ?
 			for (int i=start;i<end;i++) { // TODO w=16,32,48. use it!
 				uint8_t c=data[
-					(spt->y+vga_line-spr->y+camera_y)*IMAGE_WIDTH+\
+					(spt->y+vga_line-spr->y/256+camera_y)*IMAGE_WIDTH+\
 					spt->x + (spr->hflip?spt->w-1-i:i) + spr->frame*spt->w
 					];
 				if (c != TRANSPARENT) {
-					draw_buffer[spr->x-camera_x+i]=c;
+					draw_buffer[spr->x/256-camera_x+i]=c;
 				}
 			}
 		}
