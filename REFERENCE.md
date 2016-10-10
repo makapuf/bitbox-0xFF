@@ -7,7 +7,7 @@ In a given position, the pixels can represent :
  - a color (transparent being color 240)
  - a number (0-255 or 0xFF, the number of the color in the palette, 0 being black and 255 white)
  - a reference to a tile : the number of the color is the number of the tile from left to right, top to bottom. note that the place of the color in the palette arranged in a 16x16 grid is the same as the position of the tile in the main area.
- - a 2D field. The pixel color is placed in X,Y position on the palette, black being (0,0) and white being (15,15) by example.
+ - a 2D field. The pixel color is placed in X,Y position on the palette. By example, black is (0,0) and white (15,15). color 81 = 5*16+1 -> x=1,y=5
 
 ### levels 
 
@@ -16,12 +16,12 @@ description of the level : each id is an index on the level description bytes
 level_pos | property(0-7) | comment
 ----------|----------|---------
 color     | 0 | color of the terrain on the minimap
-control   |   | see control types
+player_color | 1 | color of the player on the level map
+control   | 2 | see control types
 accel   |   | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
 maxspeed   |   | X/Y max speed as a 2D vector pixel. depends on controls
 altmaxspeed   |   | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
 
-2D vector pixels are taken from X/Y position of color on the palette, e.g. color 81 = 5*16+1 -> x=1,y=5
 
 ### Control types
 
@@ -30,13 +30,13 @@ Player control type
 control | id | description / controls
 -----|----|----------------------
 classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile type if several gained.
-side | | player can control X and Y (no gravity for him) but always faces the same direction. nNo jumping/running. Autoscroll is given by alt speed
-hit |  | left/right ; B: run ; Y : hits enemies (horizontally) : 1 more frame for hitting
+side | 100 | player can control X and Y (no gravity for player), always faces the same direction. No jumping/running. Autoscroll is given by alt speed.
 modern | | can double/wall jump, stomp vertically on enemies (like hitting them)
 runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
 runner | | always goes right at average speed, can jump, sometimes fire
 aim | | can go left+right, aims by 45 degrees increments 
-beatemup | | can jump on ladders, falls back where we are
+hit |  | left/right ; B: run ; Y : hits enemies (horizontally or stomping) : 2 more sprites frame for hitting H/V
+beatemup | | can jump on ladders, falls back where we are (default)
 nojump | | cannot jump (nor run)
 infjump | | player has infinite jump
 
@@ -51,6 +51,7 @@ empty | 87 | empty, does not interact with player
 animated_empty | 86 | 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
 obstacle | 104 | blocks user fro left or right  
 kill | 240 | kills when touch it 
+anim_kill | 168 | idem but animated
 ladder | 147 | can go up, down even with gravity
 ice | 151 | cannot stop on X, but can jump 
 platform | 136 | cannot fall but can go through up or sideways

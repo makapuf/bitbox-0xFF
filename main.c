@@ -98,7 +98,7 @@ void get_level_start()
 	for (int j=level_y1*16;j<level_y2*16+15;j++) 
 		for (int i=level_x1*16;i<level_x2*16+15;i++) 
 		{
-			if (data[j*256+i]==get_property(level,1)) {
+			if (data[j*256+i]==get_property(level,level_pos_player_color)) {
 				// move player
 				sprite[0].x=i*16*256;
 				sprite[0].y=j*16*256;
@@ -208,7 +208,8 @@ void animate_tilemap(void) {
 	// all tiles horizontally : 320/16 = 20 tiles
 	for (int i=0;i<VGA_H_PIXELS/16;i++) {	
 		uint8_t *c = &data[(camera_y/16+tile_line)*256+camera_x/16+i];
-		if (get_terrain(*c)==terrain_animated_empty) {
+		uint8_t t = get_terrain(*c);
+		if (t==terrain_animated_empty || t==terrain_anim_kill) {
 			if (*c%4!=3) {
 				*c +=1 ;
 			} else {
@@ -233,16 +234,6 @@ void update_hud()
 
 // ---------------------------------------------------------------------------------------
 
-void game_init(void)
-{
-	loader_init();
-	if (load_bmp("level0.bmp")) {
-		frame_handler = frame_error;
-		return;
-	}
-		
-	enter_title(); // title in fact
-}
 
 
 void reset_level_data() 
@@ -275,8 +266,8 @@ void reset_level_data()
 	}
 
 	// interpret level after mapper
-	level_color=get_property(level,0);
-	// scan level to find bounds and location of starting point.
+	level_color=get_property(level,level_pos_color);
+
 	get_level_boundingbox();
 	get_level_start();
 
@@ -294,20 +285,26 @@ void reset_level_data()
 	coins=0;
 }
 
+void next_level()
+{
+	level += 1;
+	enter_leveltitle();
+	play_sfx(sfx_level);
+	// TODO small animation (like kill but happy), THEN next leveltitle ?
+}
+
 void frame_die()
 {
 	// player movement
-	if (sprite[0].vy<6 && vga_frame%4==0)
-		sprite[0].vy++;
+	if (sprite[0].vy<2000)
+		sprite[0].vy+=80;
 	sprite[0].y += sprite[0].vy;
-
 
 	// TODO SFX
 
 	if (vga_frame>=60*3) {
-
 		if (lives>0)
-			enter_level();
+			enter_leveltitle();
 		else 
 			enter_title(); 
 	}
@@ -315,11 +312,10 @@ void frame_die()
 }
 
 
-
 void frame_play()
 {
 	manage_sprites(); 
-	move_player(&sprite[0]);
+	move_player();
 	move_camera();
 	animate_tilemap();
 
@@ -352,9 +348,9 @@ void frame_title()
 
 		// reset game
 		lives = START_LIVES;
-		level = 0;
+		level = 1;
 		//
-		enter_level();
+		enter_leveltitle();
 
 	}
 
@@ -370,7 +366,7 @@ void frame_title()
 	gamepad_oldstate = gamepad_buttons[0];
 }
 
-void enter_level()
+void enter_leveltitle()
 {
 	vga_frame=0;
 	frame_handler=frame_leveltitle;
@@ -398,6 +394,18 @@ void frame_leveltitle()
 
 void frame_error()
 {
+}
+
+
+void game_init(void)
+{
+	loader_init();
+	if (load_bmp("level0.bmp")) {
+		frame_handler = frame_error;
+		return;
+	}
+		
+	enter_title(); // title in fact
 }
 
 void game_frame()

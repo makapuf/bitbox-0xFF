@@ -89,8 +89,11 @@ void frame_logo (void);
 void frame_error(void);
 
 void enter_title(void);
+void enter_leveltitle(void);
 void enter_logo (void);
-void enter_level(void);
+
+void next_level(void);
+
 
 // loader
 int loader_init (); // init loader 
@@ -110,7 +113,7 @@ struct Sprite *spawn_sprite(uint8_t type, int x, int y);
 
 // player
 void move_camera(void);
-void move_player(struct Sprite *spr);
+void move_player(void);
 void player_reset(void);
 void player_kill();
 
@@ -123,6 +126,7 @@ void stop_song();
 void manage_sprites();
 uint8_t terrain_at(int x, int y);
 
+// mapper
 void black_mapper(void);
 
 

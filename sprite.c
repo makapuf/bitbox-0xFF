@@ -334,10 +334,7 @@ void sprite_collide_player(struct Sprite *spr)
 			break;
 
 		case col_end : 
-			level += 1;
-			enter_level();
-			play_sfx(sfx_level);
-			// TODO small animation (like kill but happy) ?
+			next_level();
 			break; 
 
 		default : 
