@@ -9,8 +9,6 @@ char hud[20];
 
 static void draw_hudline(const int x, const int y) 
 {
-	uint8_t *draw8=(uint8_t*)draw_buffer;
-
 	if ((vga_line-y)>=0 && (vga_line-y)<8) {
 		for (int i=0;i<20;i++) {
 			int chr=hud[i];
@@ -20,7 +18,7 @@ static void draw_hudline(const int x, const int y)
 				for (int dx=0;dx<8;dx++) {
 					uint8_t c=read_tile(0xF5, dx+chr*8, vga_line-y);
 					if (c!=TRANSPARENT)
-						draw8[x+dx+i*8]=c;
+						draw_buffer[x+dx+i*8]=c;
 				}
 			}
 		}
@@ -30,8 +28,6 @@ static void draw_hudline(const int x, const int y)
 void screen_line8(void)
 {
 	// XXX handle x/y offset negative ?
-	char *draw8 = (char*)draw_buffer;
-
 	// background draw
 	uint8_t tile_id;
 	int abs_y = (int)vga_line+camera_y;
@@ -41,7 +37,7 @@ void screen_line8(void)
 	// first tile (clipped)	
 
 	tile_id = data[(abs_y/16)*IMAGE_WIDTH + camera_x/16];
-	memcpy(draw8,
+	memcpy(draw_buffer,
 		&data[(tile_id%16)*16 +  // tile column
 			  (tile_id/16)*16*IMAGE_WIDTH +  // tile line
 			  abs_y%16*IMAGE_WIDTH +  // line offset
@@ -57,7 +53,7 @@ void screen_line8(void)
 	for (int tile=-camera_x%16?1:0;tile<VGA_H_PIXELS/16+1;tile++) {
 		// read tilemap
 		tile_id = data[ (abs_y/16)*IMAGE_WIDTH + tile + camera_x/16];
-		memcpy(draw8+tile*16 - camera_x%16 ,
+		memcpy(draw_buffer+tile*16 - camera_x%16 ,
 		      &data[((tile_id/16)*16 + abs_y%16)*IMAGE_WIDTH +  // tile line + line ofs			 
 		      (tile_id%16)*16]  // tile column
 			  ,16);
@@ -83,7 +79,7 @@ void screen_line8(void)
 					spt->x + (spr->hflip?spt->w-1-i:i) + spr->frame*spt->w
 					];
 				if (c != TRANSPARENT) {
-					draw8[spr->x-camera_x+i]=c;
+					draw_buffer[spr->x-camera_x+i]=c;
 				}
 			}
 		}
@@ -100,12 +96,10 @@ void screen_line8(void)
 
 
 static inline void _draw_tiles_title(const int ofs, const int abs_y, const int darken) {
-	uint8_t * restrict draw8 = (uint8_t*)draw_buffer;
-
 	for (int tile=0;tile<16;tile++) {
 		// read tilemap
 		uint8_t tile_id = data[ (abs_y/16+TILE_TITLE_Y*16)*IMAGE_WIDTH + tile + TILE_TITLE_X*16];
-		memcpy(ofs + draw8 +tile*16 ,
+		memcpy(ofs + draw_buffer +tile*16 ,
 		      &data[((tile_id/16)*16 + abs_y%16)*IMAGE_WIDTH +  // tile line + line ofs			 
 		      (tile_id%16)*16]  // tile column
 			  ,16);
@@ -114,13 +108,13 @@ static inline void _draw_tiles_title(const int ofs, const int abs_y, const int d
 	// "a bit" darker
 	if (darken==1)
 		for (int i=ofs;i<ofs+16*16;i++)
-			draw8[i]&=0b01101011;
+			draw_buffer[i]&=0b01101011;
 
 	// l/r borders
 	for (int i=0;i<ofs;i++)
-		draw8[i]=0;
+		draw_buffer[i]=0;
 	for (int i=ofs+16*16;i<VGA_H_PIXELS;i++)
-		draw8[i]=0;
+		draw_buffer[i]=0;
 }
 
 
@@ -161,50 +155,46 @@ void title_line8(void)
 
 void leveltitle_line8(void)
 {
-	uint8_t * restrict draw8 = (uint8_t*)draw_buffer;
 	const int abs_y=vga_line-camera_y;
-
 
 	if (abs_y<0 || abs_y>=4*16) {
 		memset(draw_buffer,0,VGA_H_PIXELS);
 		// top/bottom borders
 		if (abs_y==4*16+1 || abs_y ==-2 ) {
-			memset(draw8+LEVELTITLE_OFS_X,0xff,8*16); 
+			memset(draw_buffer+LEVELTITLE_OFS_X,0xff,8*16); 
 		} else if (abs_y==4*16 || abs_y ==-1) {
-			draw8 [LEVELTITLE_OFS_X-1] = draw8[LEVELTITLE_OFS_X+16*8]=0xff;
+			draw_buffer [LEVELTITLE_OFS_X-1] = draw_buffer[LEVELTITLE_OFS_X+16*8]=0xff;
 		}
 	} else {
 		for (int tile=0;tile<8;tile++) {
 			// read tilemap
 			uint8_t tile_id = data[ (8+(level/2)*4+abs_y/16+TILE_TITLE_Y*16)*IMAGE_WIDTH + tile + TILE_TITLE_X*16+(level%2)*8];
-			memcpy(LEVELTITLE_OFS_X + draw8 + tile*16 ,
+			memcpy(LEVELTITLE_OFS_X + draw_buffer + tile*16 ,
 			      &data[((tile_id/16)*16 + abs_y%16 )*IMAGE_WIDTH +  // tile line + line ofs			 
 			      (tile_id%16)*16]  // tile column
 				  ,16);
 		}
 
 		// black left and right
-		for (int i=0;i<LEVELTITLE_OFS_X;i++) draw8[i]=0;
-		for (int i=LEVELTITLE_OFS_X+8*16;i<VGA_H_PIXELS;i++) draw8[i]=0;
+		for (int i=0;i<LEVELTITLE_OFS_X;i++) draw_buffer[i]=0;
+		for (int i=LEVELTITLE_OFS_X+8*16;i<VGA_H_PIXELS;i++) draw_buffer[i]=0;
 
 		// LR border 
-		draw8 [LEVELTITLE_OFS_X-2]     =0xff;
-		draw8 [LEVELTITLE_OFS_X+16*8+1]=0xff;
+		draw_buffer [LEVELTITLE_OFS_X-2]     =0xff;
+		draw_buffer [LEVELTITLE_OFS_X+16*8+1]=0xff;
 	}
 
 	draw_hudline(LEVELTITLE_OFS_X+10,64);
 }
 
 // used to detect if we need to draw title (intro ?)
-void graph_frame(void) {}
-
-void graph_line8()
+void graph_line()
 {
 	if (vga_odd) 
 		return;
 
 	if (frame_handler==frame_error) 
-		memset(draw_buffer,RGB8(0,0,70),VGA_H_PIXELS);
+		memset(draw_buffer,RGB(0,0,70),VGA_H_PIXELS);
 	else if (frame_handler==frame_play || frame_handler==frame_die)
 		screen_line8();
 	else if (frame_handler==frame_title)
@@ -212,7 +202,7 @@ void graph_line8()
 	else if (frame_handler==frame_leveltitle)
 		leveltitle_line8();
 	else if (frame_handler==0)
-		memset(draw_buffer,RGB8(70,0,70),VGA_H_PIXELS);		
+		memset(draw_buffer,RGB(70,0,70),VGA_H_PIXELS);		
 	else {
 		message("!!! error unknown frame type \n");
 		die(8,4);
