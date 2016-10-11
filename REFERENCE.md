@@ -22,6 +22,7 @@ accel   |  3 | X/Y (acceleration/gravity) as a 2D vector pixel. depends on contr
 maxspeed   | 4  | X/Y max speed as a 2D vector pixel. depends on controls
 altaccel | 5 | X/Y alt acceleration / gravity (see controls)
 altmaxspeed   | 6 | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
+maxtime | 7 | must finish level before Nx2 seconds. If set to zero, just records it
 
 
 ### Control types
@@ -93,12 +94,13 @@ singleanim4 | 107 | (grey) 4 frames animation then destroy sprite
 singleanim2 | 75 | (blueish grey) 2 frames animation then destroy sprite
 singleup8 | 128 | goes up slowly for a moment then disappear, 1 frame
 flybounce | 11 | flies 45° (starts up/left) but bounces on walls. state : current speed vector
-walk | 3 | subject to gravity, walks and reverse direction if obstacle or holes. 2 frames
+walk | 3 | walks and reverse direction if obstacle or holes. 2 frames
 bulletL | 8 | flies, not stopped by blocks, no gravity, right to left. 1frame
 bulletR | 9 | flies, not stopped by blocks, no gravity, left to right. 1frame
 walkfall |  | subject to gravity, left and right if obstacle, falls in holes. 2 frames
-leftrightjump |  | jumps from time to time. 2 frames 
+walkjump |  | walks but jumps every 2s. 2 frames 
 sticky |  | walks on borders of blocking sprites, will go around edges cw. 2frames
+sticky_r |  | walks on borders of blocking sprites, will go around edges ccw. 2frames
 vsine4 |  | vertical sine, 4 tiles height. 2frames alternating every 16frames
 bouncing | | bounces with gravity on the ground, 4 tiles high
 bulletD |  | flies, not stopped by blocks, no gravity, goes down. 2frames
@@ -131,6 +133,20 @@ switch | | transform next object in list into its next object (ex. if object in 
 three_keys | | switch (next types...) only if you've got 3 keys - removes them
 fire | | allows firing of projectile of type defined just after
 restart | | the object dies once touched. the player will respawn here once touched.
+
+### Alt Collisions
+
+When is the alt collision triggered (and the standard collision by exclusion)
+
+altcol | color_id | comment
+-------|----------|-------------
+none   |   230 | always standard collision
+top   |   | when touches top
+bottom |    | when touches bottom
+side |   | when touch side
+punched |  | when punched or run into
+projectile |  | when a projectile touches it
+punched_up |    |  when punched from bottom to top
 
 
 ### Projectile Type 
