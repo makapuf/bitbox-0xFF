@@ -208,8 +208,8 @@ void move_player()
 	if (control==control_side || on_ground) {		
 		// animate LR walking frame even if cannot move
 		if ((gamepad_buttons[0] & (gamepad_left|gamepad_right))) {
-			// if speed is contraty to where we're going, wr're sliding
-			if ((GAMEPAD_PRESSED(0,left) && spr->vx>0) || (GAMEPAD_PRESSED(0,right) && spr->vx<0)) {
+			// if speed is contrary to where we're going, wr're sliding
+			if (control!=control_side && ((GAMEPAD_PRESSED(0,left) && spr->vx>0) || (GAMEPAD_PRESSED(0,right) && spr->vx<0))) {
 				spr->frame=6;
 			} else {			
 				if (vga_frame%4==0) {
