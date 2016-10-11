@@ -13,32 +13,33 @@ In a given position, the pixels can represent :
 
 description of the level : each id is an index on the level description bytes
 
-level_pos | property(0-7) | comment
+level | property(0-7) | comment
 ----------|----------|---------
 color     | 0 | color of the terrain on the minimap
 player_color | 1 | color of the player on the level map
 control   | 2 | see control types
-accel   |   | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
-maxspeed   |   | X/Y max speed as a 2D vector pixel. depends on controls
-altmaxspeed   |   | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
+accel   |  3 | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
+maxspeed   | 4  | X/Y max speed as a 2D vector pixel. depends on controls
+altaccel | 5 | X/Y alt acceleration / gravity (see controls)
+altmaxspeed   | 6 | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
 
 
 ### Control types
 
 Player control type
 
-control | id | description / controls
+control | id | description / controls / speeds & accels
 -----|----|----------------------
-classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile type if several gained.
+classic   |  0  | standard controls : can (optional) run on pressing B, jump on pressing A, X fires (if available), L/R changes projectile type if several gained. AccelX=Walk, AccelY=LadderAccel, MaxSpeedX=Walk max speed, MaxSpeedY=LadderVSpeed. AltAccel_X=Run Accel, AltMaxSpeed_X=Run speed.  AltAccel_Y = gravity, AltMaxSpeed Y=fall/jump speed.
 side | 100 | player can control X and Y (no gravity for player), always faces the same direction. No jumping/running. Autoscroll is given by alt speed.
-modern | | can double/wall jump, stomp vertically on enemies (like hitting them)
+modern | 249 | can double/wall jump, stomp vertically on enemies (like hitting them)
 runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
 runner | | always goes right at average speed, can jump, sometimes fire
 aim | | can go left+right, aims by 45 degrees increments 
 hit |  | left/right ; B: run ; Y : hits enemies (horizontally or stomping) : 2 more sprites frame for hitting H/V
 beatemup | | can jump on ladders, falls back where we are (default)
 nojump | | cannot jump (nor run)
-infjump | | player has infinite jump
+infjump | 255 | player has infinite jumps
 
 
 ### Terrains
@@ -49,7 +50,7 @@ terrain | terrain_id | description
 ------| -------| -----
 empty | 87 | empty, does not interact with player
 animated_empty | 86 | 4 frames animated but behaves like empty. TileID will be +1 % 4 each 32 frames
-obstacle | 104 | blocks user fro left or right  
+obstacle | 104 | blocks user from left or right  
 kill | 240 | kills when touch it 
 anim_kill | 168 | idem but animated
 ladder | 147 | can go up, down even with gravity
@@ -73,7 +74,7 @@ Indices in object type definition bytes. 8 colors defined max.
  collision |2| type of collision - sprite_collide (see object collisions table)
  spawn | 3 | type of sprite spawned when this object dies (0-15) TODO COLOR ! 
  alt_collision | | alt collision type (does not influence respawning)
- alt_collision_when | | condition where alt collision is triggered (never, top, bottom, all except top, all except bottom, when punched/kicked, when punched but only up or down ... )
+ alt_collision_when | | condition where alt collision is triggered See alt_collisions
 
 
 ### Movements

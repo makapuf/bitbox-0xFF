@@ -20,6 +20,7 @@
 #define NB_SPRITETYPES 16-4 // TODO 2x16 for whole game
 
 #define START_LIVES 5
+#define START_LEVEL 0
 
 #define SPRITE_INACTIVE 200 // still loaded but not active, of type 200+old_type
 #define SPRITE_FREE 255 // not loaded, place is free
@@ -63,13 +64,11 @@ struct SpriteType {
 
 extern void (*frame_handler)( void ); // pointer to frame handler.
 
-extern uint8_t tile2terrain[256]; // fast lookup of tile_id to terrain type id.
-
 extern uint8_t data[256*256]; 
-extern uint8_t level_color; // color of pixels in minimap
 
 extern int player_x, player_y; // position inside whole map (data seen as a 256x256 tilemap. 
 extern int camera_x, camera_y; // vertical position of the title/scroll
+extern uint8_t current_level_color; // color in minimap of current level
 extern uint8_t level_x1,level_y1,level_x2,level_y2;
 
 extern struct SpriteType sprtype[NB_SPRITETYPES]; 

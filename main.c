@@ -10,8 +10,7 @@
 int lives;
 int coins;
 int level; // 0-3
-
-uint8_t level_color; // color of pixels in minimap for current level
+uint8_t current_level_color;
 uint8_t level_x1,level_y1,level_x2,level_y2; // bounding box of level in tiles
 uint16_t start_x, start_y; // start position on world
 
@@ -48,11 +47,13 @@ int sine(uint8_t phi)
 // -- tilemap-related functions
 void get_level_boundingbox(void)
 {
+	current_level_color=get_property(level,level_color);
+
 	// scan level enclosing rectangle in tiles and fill level_x1,y1,x2,y2
 	for (int x=0;x<16;x++) {
 		for (int y=0;y<16;y++)
 			// any one of the row is the level color ? ok this is the start
-			if (get_terrain(y*16+x)==level_color) {
+			if (get_terrain(y*16+x)==current_level_color) {
 				level_x1=x;
 				goto getx2;
 			}
@@ -62,7 +63,7 @@ void get_level_boundingbox(void)
 	for (int x=15;x>=level_x1;x--) {
 		for (int y=0;y<16;y++)
 			// any one of the row is the level color ? ok this is the end
-			if (get_terrain(y*16+x)==level_color) {
+			if (get_terrain(y*16+x)==current_level_color) {
 				level_x2=x;
 				goto gety1;
 			}
@@ -72,7 +73,7 @@ void get_level_boundingbox(void)
 	for (int y=0;y<16;y++) {
 		for (int x=0;x<16;x++)
 			// any one of the row is the level color ? ok this is the start
-			if (get_terrain(y*16+x)==level_color) {
+			if (get_terrain(y*16+x)==current_level_color) {
 				level_y1=y;
 				goto gety2;
 			}
@@ -82,7 +83,7 @@ void get_level_boundingbox(void)
 	for (int y=15;y>=level_y1;y--) {
 		for (int x=0;x<16;x++)
 			// any one of the row is the level color ? ok this is the end
-			if (get_terrain(y*16+x)==level_color) {
+			if (get_terrain(y*16+x)==current_level_color) {
 				level_y2=y;
 				goto finished;
 			}
@@ -98,7 +99,7 @@ void get_level_start()
 	for (int j=level_y1*16;j<level_y2*16+15;j++) 
 		for (int i=level_x1*16;i<level_x2*16+15;i++) 
 		{
-			if (data[j*256+i]==get_property(level,level_pos_player_color)) {
+			if (data[j*256+i]==get_property(level,level_player_color)) {
 				// move player
 				sprite[0].x=i*16*256;
 				sprite[0].y=j*16*256;
@@ -266,8 +267,6 @@ void reset_level_data()
 	}
 
 	// interpret level after mapper
-	level_color=get_property(level,level_pos_color);
-
 	get_level_boundingbox();
 	get_level_start();
 
@@ -348,7 +347,7 @@ void frame_title()
 
 		// reset game
 		lives = START_LIVES;
-		level = 1;
+		level = START_LEVEL;
 		//
 		enter_leveltitle();
 
