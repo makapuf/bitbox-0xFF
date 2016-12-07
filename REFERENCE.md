@@ -55,9 +55,10 @@ obstacle | 104 | blocks user from left or right
 kill | 240 | kills when touch it 
 anim_kill | 168 | idem but animated
 ladder | 147 | can go up, down even with gravity
-ice | 151 | cannot stop on X, but can jump 
+ice | 151 | cannot stop on X, but can jump. 
 platform | 136 | cannot fall but can go through up or sideways
 jump |    | makes the player automatically jump 
+animated_touch |  | animated once, transforms when user touches it
 
 > You can also use any color defined as an enemy color.
 > Remember that on tilemap, reference 255 is the level start (defaulting to top left if not found).

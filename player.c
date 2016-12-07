@@ -59,7 +59,6 @@ void move_player()
 
 
 	// handle player input 
-	kbd_emulate_gamepad();
 	static uint16_t gamepad_oldstate=0;
 	const uint16_t gamepad_pressed = gamepad_buttons[0] & ~gamepad_oldstate;
 

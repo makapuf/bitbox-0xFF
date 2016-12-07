@@ -409,8 +409,5 @@ void game_init(void)
 
 void game_frame()
 {
-	kbd_emulate_gamepad();
-
 	frame_handler(); 
-
 }
