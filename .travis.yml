@@ -1,0 +1,21 @@
+# use distro trusty
+sudo: required
+dist: trusty
+
+language: c 
+before_script:
+  - git clone https://github.com/makapuf/bitbox.git 
+
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install gcc-arm-none-eabi libsdl1.2-dev 
+  - pip install Pillow
+
+  # check it worked
+  - arm-none-eabi-gcc --version 
+  - gcc --version
+
+script:
+  - "make && make test"
+
+env:
+  - BITBOX=$TRAVIS_BUILD_DIR/bitbox
