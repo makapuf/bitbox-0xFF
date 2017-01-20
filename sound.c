@@ -5,7 +5,8 @@
 #include "game.h"
 
 
-// songtempo in level+song def apres level titles. 
+// songtempo in level+song def apres level titles. TODO
+
 // 4x (1 line=4x4 u8 for instrs, 3 lines=48patterns refs to patterns. 4 lines per level, 16 beats, 4 lines per level)
 // instr byte 1 : 2d instr x / volume y
 // instr byte 2 : 2d x sustain / y decay speed
@@ -61,7 +62,7 @@ void play_song()
 		osc[i].decay=   read_tile(SONGS_TILE,4*i+1,4*level)/16*2+1; // decay speed in 1/255 per frame. 0=slow
 		osc[i].sustain= read_tile(SONGS_TILE,4*i+1,4*level)%16*4; // x4, in frames ; max 15*8/60=1s
 		osc[i].waveform=read_tile(SONGS_TILE,4*i  ,4*level)%16;
-		message("Channel %d instr %d\n",i,osc[i].waveform);;
+		message("Channel %d waveform %d\n",i,osc[i].waveform);;
 	}
 
 	tick=pattern=frame=0;
@@ -183,7 +184,7 @@ static void update_song()
 		if (tick==16) {
 			pattern+=1;
 			tick=0;
-			message("in pattern %d\n",pattern);
+			message("in pattern %d : tile %d \n",pattern,read_tile(SONGS_TILE,pattern%16,1+pattern/16) );
 		}
 	}
 	frame += 1;

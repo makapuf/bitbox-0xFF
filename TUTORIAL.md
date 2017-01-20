@@ -131,13 +131,19 @@ Each song will be played as 4 tracks, each with a fixed "instrument"/synth prese
 The 4 lines defining a song shold be read left to right, top to bottm : 
 
     aaaabbbbccccdddd
-    Seeeeeeeeeeeeeee
+    eeeeeeeeeeeeeeee
     ffffffffffffffff
     gggggggggggggggg
     
  - aaaa, bbbb, cccc, dddd are 4 instrument defs (one per track), 4 pixels each.
- - S is the speed fo the song to be played (Speed of song in 1/60 frames per tick)
  - eeee...eeeefff....ffffgggg....gggg is one sequence of 48 pattern refs. A pattern ref is a reference to a pattern tile (or pink transparent if empty).
+
+### Instruments
+
+Instruments are made of 4 bytes.
+
+- byte 0 is a 2D field 0xYX , where Y is the volume and X is the wave form (0=12% square, 1=25% square, 2=50% square, 3=sawtooth, 4=triangle, 5=noise)
+- byte 1 is a 2D field 0xYX , where Y=decay speed, X = sustain
 
 ### Pattern tiles
 

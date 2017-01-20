@@ -161,6 +161,20 @@ Projectile types are similar to object types (and are defined in the same space)
  collision | | type of collision : projectiles collide only with objects. take object value
  spawn | 3 | type of sprite spawned when this object dies - or TRANSPARENT
 
+## Sound
+
+### Instruments properties
+
+instr_prop | id | description
+---------- | --- | -----------
+square12   | 0 | square wave, 12% ratio
+square25   | 1 | square wave, 25% ratio
+square50   | 2 | square wave, 50% ratio
+sawtooth   | 3 | sawtooth wave
+triangle | 4 | triangle wave
+noise | 5 | noise wave
+
+
 ### SFX definitions
 
 sfx | id | description

@@ -4,3 +4,4 @@ build/
 *_emu
 __*
 defs.h
+*.pyc
