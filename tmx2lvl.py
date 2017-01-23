@@ -109,11 +109,18 @@ for tilemap in root.findall("layer") : # intro,1,2,3,4 - skipping bad ones TODO 
 	else :
 	    raise ValueError,'Unsupported layer encoding :'+data.get('encoding')
 
-	# music instr defs as properties of level
 	if lvlid is not None :
-		for instr in range(1,5) : 
-			layer_properties = {p.get("name"):p.get("value") for p in tilemap.findall('properties/property')}
+		layer_properties = {p.get("name"):p.get("value") for p in tilemap.findall('properties/property')}
+		
+		# level properties
+		properties[lvlid][2]=DEFS['control types'][layer_properties.get("control","classic")]
+		properties[lvlid][3] = int(layer_properties.get('accel_x',4))+int(layer_properties.get('accel_y',8))*16
+		properties[lvlid][4] = int(layer_properties.get('maxspeed_x',8))+int(layer_properties.get('maxspeed_y',8))*16
+		properties[lvlid][5] = int(layer_properties.get('alt_accel_x',0))+int(layer_properties.get('alt_accel_y',4))*16
+		properties[lvlid][6] = int(layer_properties.get('alt_maxspeed_x',0))+int(layer_properties.get('alt_maxspeed_y',4))*16
 
+		# music instr defs as properties of level
+		for instr in range(1,5) : 
 			waveform=DEFS['instruments properties'][layer_properties.get('waveform%d'%instr,'square25')]
 			volume = int(layer_properties.get('volume%d'%instr,'8'))
 			decay  = int(layer_properties.get('decay%d'%instr,'0'))
@@ -144,7 +151,7 @@ for ym,l in enumerate(minimap) :
 	for xm,c in enumerate(l) : 
 		dest_pixels[xm,240+ym] = c
 
-# export properties
+# export level / object properties
 # ----------------------------------------------------
 for ym,p in enumerate(properties) : 
 	for xm,c in enumerate(p): 

@@ -93,28 +93,6 @@ void get_level_boundingbox(void)
 	message("Level found to be from %dx%d-%dx%d\n",level_x1,level_y1,level_x2,level_y2);
 }
 
-// Set level start position as color white, replace with tile 0.
-void get_level_start()
-{
-	for (int j=level_y1*16;j<level_y2*16+15;j++) 
-		for (int i=level_x1*16;i<level_x2*16+15;i++) 
-		{
-			if (data[j*256+i]==get_property(level,level_player_color)) {
-				// move player
-				sprite[0].x=i*16*256;
-				sprite[0].y=j*16*256;
-
-				data[j*256+i]=data[j*256+i-256]; // replace with upper one. If was an object, already replaced
-				message("starting position : (%d,%d)\n",sprite[0].x/256,sprite[0].y/256);
-				return;
-			}
-		}
-	// Not found, set default position on top left of level
-	sprite[0].x=level_x1*16*256;
-	sprite[0].y=level_y1*16*256;
-	message("level start not found, using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
-}
-
 
 // load sprites from tilemap if onscreen, or unload them to tilemap if offscreen
 void manage_sprites( void )
@@ -351,7 +329,12 @@ void frame_title()
 		//
 		enter_leveltitle();
 
+	} else if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_select) {
+		// XXX SFX
+		load_next();
+		enter_title(); // re-enter title
 	}
+
 
 	// kinda like animate_tilemap only simpler
 	uint8_t tile_line = vga_frame%8; // tile line to process == 0-7
@@ -395,11 +378,10 @@ void frame_error()
 {
 }
 
-
 void game_init(void)
 {
 	loader_init();
-	if (load_bmp("level0.bmp")) {
+	if (load_next()) {
 		frame_handler = frame_error;
 		return;
 	}

@@ -45,52 +45,68 @@ char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
 int current_file;
 char full_path[80]; // not on stack
 
-// compare simplt two names
-static int cmp(const void *p1, const void *p2){
-    return strcmp( (char * const ) p1, (char * const ) p2);
-}
+FILINFO fno;
+DIR dir;
 
 int loader_init()
 {
 	memset(&fs, 0, sizeof(FATFS));
-	return f_mount(&fs,"",1); // mount now
-	// open dir here ?
+
+	if (f_mount(&fs,"",1) !=  FR_OK ) {  // mount now
+    	message("Error mounting filesystem !");die (2,1);
+	}
+	// open dir
+    if (f_opendir(&dir, ROOT_DIR) != FR_OK ) {
+    	message("Error opening directory !");die (2,2);
+    }
+
+    return 0;
 }
 
-void scan_files()
+int endsWith (char* base, char* str) {
+    int blen = strlen(base);
+    int slen = strlen(str);
+    return (blen >= slen) && (0 == strcmp(base + blen - slen, str));
+}
+
+int load_next()
 {
 
     FRESULT res;
-    FILINFO fno;
-    DIR dir;
 
-    char *fn;   /* This function is assuming non-Unicode cfg. */
+    char *fn=0;   /* This function is assuming non-Unicode cfg. */
 
-    res = f_opendir(&dir, ROOT_DIR);                       /* Open the root directory */
-    if (res == FR_OK) {
-        for (nb_files=0;nb_files<MAX_FILES;) {
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-            // if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
-            fn = fno.fname;
-            if (!(fno.fattrib & AM_DIR)) { // not a dir
-            	// check extension : only keep .bmp files
-            	if (strstr(fn,".bmp") || strstr(fn,".BMP")) { // search ignoring case
-                	strcpy(filenames[nb_files],fn);
-                	nb_files +=1;
-            	}
-            }
-        }
-        if (res != FR_OK) {
-	        message("Error reading directory !");
-        }
-        f_closedir(&dir);
-    } else {
-        message("Error opening directory !");
-    }
+    do {
+	    do {
+		    res = f_readdir(&dir, &fno);                   /* Read a directory item */
+		    if (res != FR_OK ) {  
+		        message("Error reading directory !");
+		        die (2,3);
+		    }
 
-    // sort it
-    qsort(filenames, nb_files, 13, cmp);
+		    if (fno.fname[0] == 0) { // end of dir ? rescan
+		    	f_closedir(&dir);
+			    if (f_opendir(&dir, ROOT_DIR) != FR_OK ) {
+			    	message("Error reloading directory !");
+			    	die (2,4);
+			    }
+		    }
+		} while ( fno.fname[0] == 0 );
+		message("debug: next file, now : %s, %d, %x,%x\n",fno.fname,(endsWith(fno.fname,".bmp") || endsWith(fno.fname,".BMP")),fno.fattrib, AM_DIR);
+
+
+	    if (!(fno.fattrib & AM_DIR)) { // not a dir
+	    	// check extension : only keep .bmp files
+	    	if (endsWith(fno.fname,".bmp") || endsWith(fno.fname,".BMP")) { // search ignoring case
+			    fn = fno.fname; // ok will load it
+	    		message("ok, will load %s\n",fn);
+	    	}
+	    }
+	} while (fn==0); 
+
+	message("now loading : %s\n",fn);
+	return load_bmp(fn);
+
 }
 
 

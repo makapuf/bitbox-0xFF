@@ -48,9 +48,35 @@ void player_reset()
 	alt_maxspeed_x = get_property(level,level_altmaxspeed)%16*256;
 	alt_maxspeed_y = get_property(level,level_altmaxspeed)/16*256;
 
+	message("control:%d\n",control);
 	message("STD X:acc=%d max=%d Y:acc=%d max=%d\n", std_accel_x, std_maxspeed_x, std_accel_y, std_maxspeed_y);
 	message("ALT X:acc=%d max=%d Y:acc=%d max=%d\n", alt_accel_x, alt_maxspeed_x, alt_accel_y, alt_maxspeed_y);
+
 }
+
+
+// Set level start position as color white, replace with tile 0.
+void get_level_start()
+{
+	for (int j=level_y1*16;j<level_y2*16+15;j++) 
+		for (int i=level_x1*16;i<level_x2*16+15;i++) 
+		{
+			if (data[j*256+i]==get_property(level,level_player_color)) {
+				// spawn/move player to its initial position
+				sprite[0].x=i*16*256;
+				sprite[0].y=j*16*256;
+
+				data[j*256+i]=data[j*256+i-256]; // replace with upper one. If was an object, already replaced
+				message("starting position : (%d,%d)\n",sprite[0].x/256,sprite[0].y/256);
+				return;
+			}
+		}
+	// Not found, set default position on top left of level
+	sprite[0].x=level_x1*16*256;
+	sprite[0].y=level_y1*16*256;
+	message("level start not found, using default starting position : (%d,%d)\n",sprite[0].x,sprite[0].y);
+}
+
 
 void move_player()
 {
@@ -276,17 +302,22 @@ void move_player()
 
 void move_camera(void)
 {
-	const struct Sprite *spr = &sprite[0];
+	struct Sprite *player = &sprite[0];
 
+	// autoscroll ? 
+	if (control==control_side) {
+		camera_x  += alt_maxspeed_x/256; // 0-15
+		player->x += alt_maxspeed_x;
+		// player offscreen / camera border collision 
+	} else {
+		// player makes camera move : center camera around player
+		if (player->x/256 > camera_x + 200 ) camera_x = player->x/256-200;
+		if (player->x/256 < camera_x + 100 ) camera_x = player->x/256>100 ? player->x/256-100 : 0;
 
-	if (spr->x/256 > camera_x + 200 ) camera_x = spr->x/256-200;
-	if (spr->x/256 < camera_x + 100 ) camera_x = spr->x/256>100 ? spr->x/256-100 : 0;
-
-	if (spr->y/256 > camera_y + 150 ) camera_y = spr->y/256-150;
-	if (spr->y/256 < camera_y + 50  ) camera_y = spr->y/256-50;
-
+		if (player->y/256 > camera_y + 150 ) camera_y = player->y/256-150;
+		if (player->y/256 < camera_y + 50  ) camera_y = player->y/256-50;
+	}
 	// check level limits
-
 	if (camera_x<level_x1*256) camera_x=level_x1*256;
 	if (camera_y<level_y1*256) camera_y=level_y1*256;
 

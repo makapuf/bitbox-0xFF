@@ -96,6 +96,7 @@ void next_level(void);
 
 // loader
 int loader_init (); // init loader 
+int load_next(); // load next file in directory
 int load_bmp (const char *filename); // --> init + load_next (cycle)
 int load_game_data (uint8_t *data);
 int sine (uint8_t phi);
@@ -115,6 +116,7 @@ void move_camera(void);
 void move_player(void);
 void player_reset(void);
 void player_kill();
+void get_level_start(void); // set player at its first position in level
 
 // sounds
 void play_sfx( int sfx_id ); 

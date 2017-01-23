@@ -5,14 +5,15 @@ Representation of a level in TMX
 - tilesets are defined as one .png file. copies of that png can be defined after for objects with different tilesizes (always multiples of tilesize)
 - terrains are defined in the tileset and are labelled obstacle, ice, ladder, platform, ...
 
-- tilemap is made of at least 5 levels, named level0-3 + intro (which must be at its place )
+- tilemap is made of at least 5 levels, named level1-4 & intro (which must be at the right place )
   when generating from level, two guidelines are defined : a checkerboard made of tiles 0 and 1 and a grid made of the tiles themselves for reference of where they are defined and where they are free. 230-defined colors are left empty 
 - additional levels should be prefixed with _ to not count as a level
 - object types are properties of their first tile, which must be defined with properties "movement","collision","spawn". They are placed on the map as tiles.
+- player movement type is "player"
 - music tile should be placed at right position in a 16x16 pattern with references to music patterns
-
-
+- level properties are defined with its layer, including music (see after)
 - music instrs are defined as properties of a level (volume0..3 = 0..15, waveform0..3= )
+
 TODO : 
 - music pattern with .song file property ? 
 - reference spawn by names
