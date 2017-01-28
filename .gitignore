@@ -5,3 +5,4 @@ build/
 __*
 defs.h
 *.pyc
+output.map
