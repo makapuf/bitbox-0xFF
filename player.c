@@ -37,6 +37,8 @@ void player_reset()
 
 	// avoid recomputing each frame
 	control = get_property(level,level_control);
+	if (control==control_infjump)
+		njumps=9999; // can start jumping at once
 
 	std_accel_x = get_property(level,level_accel)%16*16;
 	std_accel_y = get_property(level,level_accel)/16*16;
@@ -163,7 +165,7 @@ void move_player()
 			switch (control) {
 				case control_classic : njumps=0; break;
 				case control_modern  : njumps=1; break;
-				case control_infjump : njumps=9999; break;
+				case control_infjump : njumps=99999; break;
 			}
 		} else if (njumps) {
 			play_sfx(sfx_jump); 
@@ -305,7 +307,7 @@ void move_camera(void)
 	struct Sprite *player = &sprite[0];
 
 	// autoscroll ? 
-	if (control==control_side) {
+	if (control==control_side || control==control_infjump) {
 		camera_x  += alt_maxspeed_x/256; // 0-15
 		player->x += alt_maxspeed_x;
 		// player offscreen / camera border collision 
