@@ -1,0 +1,242 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="reveal.css">
+        <link rel="stylesheet" href="beige.css">
+        <style>
+        img.pixel {
+          image-rendering: crisp-edges ;
+          image-rendering: -moz-crisp-edges;
+          width : 512px; 
+        }
+        </style>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+
+<section><h1>0xFF</h1><h3>The Game framework for bitbox<h3></section>
+<section><h1>Bitbox</h1><h3>the console<h3><img src="logo2.png"/></section>
+<section><img src="bitbox.jpg"/></section>
+<section>
+    <h3> Bitbox : Hardware project</h3>
+    <ul>
+        <li> side project for <b>fun</b></li>
+        <li> DIY open hardware, retro game console project</li>
+        <span class="fragment"> 
+        <br>
+            <li> single board / 1 chip (5x6.5 cm)</li>
+            <li> 15bit VGA, 2xUSB, 1 microSD</li>
+            <li> 168MHz, 1M flash, 192k RAM : not enough to keep a whole image (typ. 640x480)</li>
+        </span>
+        <span class="fragment">
+        <br>
+            <li> <b>bitbox micro</b> half-everything (size, components, CPU speed, memory, usb, resolution, microSD, cost)</li>
+        </span>
+    </ul>
+</section>
+
+<section>
+    <h3>Development</h3>
+    <ul>
+        <li>retro coding : direct hardware handling from CPU</li>
+        <li>no OS, driver libs embedded in games </li>
+        <li>C development with gnu gcc toolchain on stock ubuntu/windows/macos/haiku</li>
+        <li>PC backend for low level libs</li>
+        <li>sound generation</li>
+        <li>USB handling</li>
+        <li>graphics generation ( scanline-based )</li>
+    </ul>
+</section>
+
+<section>
+    <h3> Games and community</h3>
+    <ul>
+        <li>bitboxes around the world !</li>
+        <li>small active core of developers for games, libs, ..</li>
+        <li>custom extensions / video outputs ...</li>
+        <br>
+        <li>https://github.com/makapuf/bitbox</li>
+        <li>See software index - 26 entries so far</li>
+        <li>include games, 3 emulators, programs, video player ...</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Making games</h2>
+</section>
+
+<section><h3>Survey: Who knows </h3> 
+    <ul>
+        <li class = "fragment">game development (in C)</li>
+        <li class = "fragment">handling collisions &amp; sprite priorities yourself</li>
+        <li class = "fragment">generate line-based graphics sprites/tiles w/ collisions</li>
+        <li class = "fragment">make pixel graphics with Gimp</li>
+        <li class = "fragment">do 2D level design (by example with Tiled)</li>
+        <li class = "fragment">compiling/debugging for an ARM cortex m4 micro (setting up the toolchain)</li>
+        <li class = "fragment">compose music with a tracker</li>
+    </ul>
+</section>
+
+<section>
+    <h3>Let's simplify</h3>
+    <ul>
+    <li>seems quite challenging for a simple game<br>
+    not that much : learning each of those is simple
+    </li>
+
+    <li>must lower (perceived) barrier to entry to build, program and (finally) design simple games.</li>
+    </ul>
+</section>
+<section>
+    <h2>New survey</h2>
+    <span class="fragment">
+    <ul>
+        <li>who knows how to make a .BMP file with gimp ?</li>
+    </ul>
+</section>
+
+<section>
+    <h3>simplified process </h3>
+    <ol>
+        <li>make a complete simple game with a unique image</li>
+        <li>put it in a SD card, the SD card in console, power on</li>
+        <li>an interpreter program loads the image in RAM</li>
+        <li>play the game</li>
+        <span class="fragment"><h3> THE MARIO MAKER OF THE BITBOX !</h3>
+        (restricted to certain kind of 2d games)
+        </span>
+    </ol>
+</section>
+
+<section>
+    <h3>general workflow</h3>
+    <pre>
+                          REFERENCE.md
+                      /                 \
+                defs.h                    your brain+gimp
+                   |                            |    
+             0xFF.c program           BMP file on SDCard
+                   |                            |
+              bitbox flash  --> Play. <--   bitbox RAM
+            (or pc emulator)
+
+    </pre>
+</section>
+
+<section>
+    <h3>Question</h3>
+    <ul>
+        <li>what do you need to make a 4-level 2d platformer ?</li>
+        <li>and how do you encode it in an image ?</li>
+    </ul>
+</section>
+
+<section>
+    <h3>A 2D platformer/side shooter/infinite runner ?</h3>
+    <ul>
+    <li>World Physics (scroll, jumps, gravity, ... )</li>
+    <li>Tileset graphics and behaviour (terrain)</li>
+    <li>Level Tilemaps</li>
+    <li>Sprites frames graphics, behaviours &amp; movements :<ul>
+        <li>program (e.g.: mondrian programming language)</li>
+        <li>presets (mario maker) </li>
+        </ul>
+    </li>
+    <li>Music and sound effects</li>
+    </ul>
+</section>
+
+<section>
+    <h3>The canvas</h3>
+    <ul>
+        <li> 256 colors, 256x256 pixels bitmap<br>
+            using bitbox fixed micro palette</li>
+        <li> divided in 16x16 squares of 16x16 pixels</li>
+        <li>
+            256 colors (0-0xFF) / 256 tiles / 256 pixels per tile<br>
+            relations : tile <-> pixel in a tile, pixel in tile <-> color, color<-> tile
+        </li>
+    </ul>
+</section>
+
+<section>
+    <h3>Demo : raw canvas </h3>
+    <img src="demo0.png" class="pixel" /> 
+</section>
+
+<section>
+    <h3>drawings</h3>
+    <ul>
+    <li>tiles : draw them on canvas</li>
+    <li>sprite frames : draw them on canvas</li>
+    <li>tilemap : ref to a tile with a color
+    <span class="fragment"><br>ex : topleft tile = number 00 = color black</span>
+    <span class="fragment"><br>(also top left color in palette)</span>
+    </ul>
+
+
+    <div class="fragment"><br>no behaviours yet</div>
+</section>
+
+<section><h2>Demo : tiles</h2> <img src="demo1.png" class="pixel"/> </section>
+<section><h2>Demo : sprites 1</h2> <img src="demo2.png" class="pixel"/> </section>
+<section><h2>Demo : sprites 2</h2> <img src="demo3.png" class="pixel"/> </section>
+
+<section>
+    <h3>The lower tiles</h3>
+    <ul>
+    <li>5 Lower tiles to define all behaviours</li>
+    <li>minimap, level/obj defs, titles, music, sound effects</li>
+    <li>all described in REFERENCE.md file</li>
+    </ul>
+</section>
+
+<section>
+    <h3>minimap</h3>
+    <ul>
+    <li>lower left tile.</li>
+    <li>256 pixels representing the 256 tiles</li>
+    <li>level : one color per level id</li>
+    <li>tiles : behaviour or the tile through preset colors (see ref.)</li>
+    </ul>
+    <img class="pixel" src="minimap.png" style="width:64px" />
+</section>
+
+<section>
+<h3>levels/objects info</h3>
+    <ul>
+    <li>one tile with one line per definition</li>
+    <li>4 first ones for levels, next for objects</li>
+    <li>levels : physics, type of game, color on minimap</li>
+    <li>objects : tile id on canvas, movement type, collision, action after kill, +alt ...</li>
+    <li><i>see reference, <b>many</b> (interacting) types ! </i></li>
+    </ul>
+    <img class="pixel" src="objdef.png" style="width:64px" />
+</section>
+<section>
+    <dl>
+    <dt>movements</dt> 
+    <dd>static, once, bulletL/R, walk, walkfall, walkjump, sine, player, sticky, bumps
+    </dd>   
+    <dt>collision</dt> 
+    <dd>none,block,kill,killrespawn,coin,life, key, spawner,switchtile,3keyswitch,endlevel,spawnpoint</dd>
+    <dt>spawn</dt> 
+    <dd>spawned sprite id</dd>
+    </dl> 
+
+</section>
+<section><h2>Demo : sprites </h2> <img src="demo3.png" class="pixel"/> </section>
+<section><h2>Demo : finishing </h2> <img src="demo4.png" class="pixel"/> </section>
+
+<section><h3>using a real map editor</h3>tiles + sprites png + tilemap/sprites tmx &#8660; bmp level using tools </section>
+<section><img src="tiled.png"/></section>
+<section><h1>Your turn !</h1></section>
+
+        </div>
+        </div>
+        <script src="reveal.js"></script>
+        <script>
+            Reveal.initialize();
+        </script>
+    </body>
+</html>
