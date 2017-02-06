@@ -35,7 +35,7 @@ classic   |  0  | standard controls : can (optional) run on pressing B, jump on 
 side | 100 | player can control X and Y (no gravity for player), always faces the same direction. No jumping/running. Autoscroll is given by AltMaxSpeed_X.
 modern | 249 | can double/wall jump, stomp vertically on enemies (like hitting them)
 runstomp | | can charge by keeping B pressed while not moving then when ready runs, can stomp enemies forward by running (like hitting them) 
-runner | | always goes right at average speed, can jump, sometimes fire (combine with side as no gravity + ladders everywhere ? )
+runner | | always goes right at average speed, can jump, sometimes fire (combine with side as no gravity + ladders everywhere ? ) - jump types as altspeedX, 0=none, 1=1, 15=inf
 aim | | can go left+right, aims by 45 degrees increments 
 hit |  | left/right ; B: run ; Y : hits enemies (horizontally or stomping) : 2 more sprites frame for hitting H/V
 beatemup | | can jump on ladders, falls back where we are (default)

@@ -158,13 +158,6 @@ for ym,p in enumerate(properties) :
 		dest_pixels[16+xm+(ym//16)*8,240+ym%16] = c
 
 
-
-
-
-# XXX levels 
-# XXX terrains
-# XXX checks pa overdraw ...
-
 # finally save it as bmp 256c, non compressed
 outfilename = args.file.rsplit('.',1)[0]+'.bmp'
 dest_img.save(outfilename)

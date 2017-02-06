@@ -45,7 +45,7 @@ static int frame; // 1/60s
 static int tick;  // 1/4 note
 static int pattern; // 16 ticks
 static int play; // 0 : dont play, 1 : play song
-int speed=9;
+int speed=17;
 
 // sfx position.
 static int sfx_playing=-1; // 0-15, <0 = none

@@ -17,6 +17,7 @@ Representation of a level in TMX
 TODO : 
 - music pattern with .song file property ? 
 - reference spawn by names
+- move terrain to tile property
 
 """
 from PIL import Image 
