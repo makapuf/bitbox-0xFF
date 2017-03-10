@@ -1,8 +1,9 @@
 build/
 *.elf
 *.bin
-*_emu
+*_sdl
 __*
 defs.h
 *.pyc
 output.map
+levels/*.bmp 
