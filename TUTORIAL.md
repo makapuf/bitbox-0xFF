@@ -6,26 +6,17 @@ Generic format and setting your image editor
 
 The image must be saved as a 256x256 pixels 8bpp - 256 color, bmp, non rle-compressed file. This simple format is used to simplify decoding on a microcontroller. Larger images with an header of 256x128 (with a total of 256x384) can also be used.
 
-The palette used is fixed and must be the bitbox micro palette. If you use another 256 color palette or modify the palette, it will be discarded on load and the engine will use the bitbox micro palette.
-
-
-***XXX insert micro palette image XXX ***
-
+The palette used is fixed and must be the bitbox micro palette. If you use another 256 color palette or modify the palette, it will be discarded on load and the engine will use the bitbox micro palette instead. [micro palette](https://github.com/makapuf/bitbox-0xFF/blob/master/pal_micro.png?raw=true)!
 
 Even if almost any image editor can be used, setting up your image editor for work is quite important.
-
 
 The important steps to create a blank image are:
 
  - Create a blank 256x256 pixels image
- - Use indexed color mode. The image format uses a palette which by definition is an indexed color mode. You MUST use precise colors ids sometimes and not nuances, so this is important. On GIMP by example, use the Image/mode/indexed colors using a personalized palette. Select bitbox micro palette, Don't remove unused colors, and keep the colors in order (this is important).
+ - Use indexed color mode. The image format uses a palette which by definition is an indexed color mode. You MUST use precise colors ids sometimes and not nuances, so this is important. On GIMP by example, use the Image/mode/indexed colors, using a personalized palette. Select bitbox micro palette, Don't remove unused colors, and keep the colors in order (this is important).
  - Open the indexed palette window (which is NOT the color palette window on gimp)
  - Display a 16x16 grid as a guide
  - Use the pencil tool (press key "N" under gimp), not the brush, to have sharp edges (also set your eraser to have sharp edges). Also set your brush size to 1 pixel wide, it's pixel art we're talking about.
-
-
-***(XXX screenshots on gimp)***
-
 
 I presented GIMP here but there are many graphical editors capable of working with indexed colors, including photoshop. 
 
@@ -34,7 +25,7 @@ I presented GIMP here but there are many graphical editors capable of working wi
 Main area
 ==========
 
-This main area (as opposed to the optional title zone defined afterwards) is a 256x256 pixels image, made of 16x16 squares of of 256 values pixels.
+This main area (as opposed to the optional title zone defined afterwards) is a 256x256 pixels image, made of 16x16 squares of 256 values pixels.
 
 The 16x16 squares will be called tiles. There are 256 of them, 16 lines of 16 tiles. We will count them from 0 (top left) to 255 or 0xff in hex (bottom right).
 
@@ -79,13 +70,11 @@ As we saw, the tileset will be defined by drawing tiles on your image and refere
 
 Well, each on your image used as a tile for your game will be referenced by the minimap, and we will encode its behaviour with different colors. 
 
-Back to our example, say that our tile 0x40 which we represented as a rock is *solid*, we will paint its corresponding pixel on the minimap (ie the 1st pixel of the 4th line) with the color for solid objects : 104, which is a kind of brown (think "ground"). Empty tiles (or background ones), which do not stop the player are marked with 87, which is blue (think "sky"). This is a convention and will always be the case. A reference is given hereafter.
+Back to our example, say that our tile 0x40 which we represented as a rock is *solid* (ie player can walk on it), we will paint its corresponding pixel on the minimap (ie the 1st pixel of the 4th line) with the color for solid objects : 104, which is a kind of brown (think "ground"). Empty tiles (or background ones), which do not stop the player are marked with 87, which is blue (think "sky"). This is a convention and will always be the case. A reference is given hereafter.
 
 Those behaviours (solid, sky, ..) are called **terrains** .
 
-> This means that you cannot use those predefined *terrains colors* for your *levels colors* on your minimap. Life is though.
-
-> Note that 
+> This means that you cannot use those predefined *terrains colors* to represent your *levels colors* on your minimap. Life is though. 
 
 Now you can draw your first tiles and then compose them into tilemaps for your levels. 
 
@@ -101,7 +90,6 @@ Object Types
 Object types are defined in the object map tile which is defined just at the right of the Minimap (where we defined our level color for the minimap, remember ?). You will find object types definitions for your whole game here, an object type being defined as 8 pixels horizontally. The tile defines two columns of 8 pixels, for each line, which make it 16x2=32 objects.
 
 In fact, the 4 first "objects" define the level-specific constants, and then the next ones define object types 0-25 (28 = 32 objects - 4 levels)
-
 
 ### Level-lines : positions 0-3
 - position 0 defines the color of the level in the minimap.
@@ -174,24 +162,25 @@ An SFX line is generally defined as :
  - Speed of play (to play very quickly, set it to zero).
  - N notes to play the SFX to the end of line. Silence is pink transparent.
 
-
-
-
 # HUD
 The HUD is used to present to the user the current status : level of lives, score and keys. Letters are encoded as 8x8 minitiles (4 in a tile). They are specified as 5 tiles (20 minitiles) on the bottom of the image, see the examples.
 
-Extras 
-=====
-## Bitmap Header
-
-The title space is an optional 256x128 header on the top of your image, which will not be used at all during the game but can be used to present your game with a simple bitmap. you resulting game image will thus be 256x384 pixels.
-
 ## Titles 
-The title level is defined by a tile just above the minimap, which will be used to define a simple 16x8 mini-level + 4 8x4 microlevels (using the same object types). 
+The title level is defined by a tile just right of the minimap, which will be used to define a simple 16x8 mini-level + 4 8x4 microlevels (using the same object types). 
 
  - The 16x8 will be used as a title for your game. 
  Note that this level will not be playable, will have no scrolling and will just serve as illustration of your game.
  - The 8x4 tiles will be presented as a 128x64 tilemap for the four level titles within your game.
+
+
+Good ! Now you can turn to the  [Reference](https://github.com/makapuf/bitbox-0xFF/blob/master/REFERENCE.md) and study some of the [examples](https://github.com/makapuf/bitbox-0xFF/blob/master/levels/) .
+
+Extras 
+=====
+
+## Bitmap Header
+
+The title space is an optional 256x128 header on the top of your image, which will not be used at all during the game but can be used to present your game with a simple bitmap. you resulting game image will thus be 256x384 pixels.
 
 ## Mappers
 
