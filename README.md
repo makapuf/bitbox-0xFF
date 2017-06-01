@@ -1,6 +1,6 @@
 # 0xFF : use paint to make games.
 
-Having a mini DIY game console to play games on (The Bitbox console)[https://github.com/makapuf/bitbox] is very cool and making games on it with nothing but your C compiler is a great feeling. However, I found that some people would like to create games on it but lack the know-how (or the patience) of setting up a build chain, learn C, gdb, the bitbox SDK and 2D game dev (while all very simple steps if you know the majority of them, having to go through all of them at once is a little daunting)... 
+Having a mini DIY game console to play games on [The Bitbox console](https://github.com/makapuf/bitbox) is very cool and making games on it with nothing but your C compiler is a great feeling. However, I found that some people would like to create games on it but lack the know-how (or the patience) of setting up a build chain, learn C, gdb, the bitbox SDK and 2D game dev (while all very simple steps if you know the majority of them, having to go through all of them at once is a little daunting)... 
 
 So I built this project to let people be creative and start making some simple games quickly, while : 
 
