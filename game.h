@@ -130,6 +130,10 @@ uint8_t terrain_at(int x, int y);
 // mapper
 void black_mapper(void);
 
+// editor
+void frame_edit_main(void);
+void line_edit_main(); // render edit graph line
+
 
 // Pure inlines 
 // ----------------------------------

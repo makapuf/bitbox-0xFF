@@ -5,7 +5,7 @@ LEVELS_TMX = castle flappy shooter mario pac
 NAME := 0xFF
 DEFINES += VGA_MODE=320 VGA_BPP=8
 #DEFINES += DISABLE_ESC_EXIT
-GAME_C_FILES= main.c graph.c loader_sd.c mappers.c sound.c player.c sprite.c
+GAME_C_FILES= main.c graph.c loader_sd.c mappers.c sound.c player.c sprite.c edit.c
 USE_SDCARD = 1
 # if not use sdcard, use loader_flash + make data
 

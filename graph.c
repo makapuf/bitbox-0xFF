@@ -202,7 +202,9 @@ void graph_line()
 	else if (frame_handler==frame_leveltitle)
 		leveltitle_line8();
 	else if (frame_handler==0)
-		memset(draw_buffer,RGB(70,0,70),VGA_H_PIXELS);		
+		memset(draw_buffer,RGB(70,0,70),VGA_H_PIXELS);
+	else if (frame_handler==frame_edit_main)
+		line_edit_main();
 	else {
 		message("!!! error unknown frame type \n");
 		die(8,4);
