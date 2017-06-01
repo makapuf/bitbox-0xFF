@@ -21,7 +21,7 @@ defs.h: REFERENCE.md
 
 todo: main.c graph.c loader_sd.c
 	grep -n TODO $^
-
+levels: $(LEVELS_BMP)
 
 .PHONY: todo 
 clean::
