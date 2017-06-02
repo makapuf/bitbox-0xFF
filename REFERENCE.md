@@ -15,9 +15,9 @@ description of the level : each id is an index on the level description bytes
 
 level | property(0-7) | comment
 ----------|----------|---------
-color     | 0 | color of the terrain on the minimap
-player_color | 1 | color of the player on the level map
-control   | 2 | see control types
+color     | 0 | color of the terrain on the minimap (FIXME:  to remove)
+player_color | 1 | color of the player on the level map (ie player object id) - object type must be a player one
+control   | 2 | see control types (FIXME : make that a property of the player object type ?)
 accel   |  3 | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
 maxspeed   | 4  | X/Y max speed as a 2D vector pixel. depends on controls
 altaccel | 5 | X/Y alt acceleration / gravity (see controls)
@@ -45,7 +45,7 @@ infjump | 255 | player has infinite jumps
 
 ### Terrains
 
-Terrain types. ie how a terrain tile behaves.
+Terrain types, i.e. how a terrain tile behaves as displayed on minimap.
 
 terrain | terrain_id | description
 ------| -------| -----
@@ -59,15 +59,18 @@ ice | 151 | cannot stop on X, but can jump.
 platform | 136 | cannot fall but can go through up or sideways
 jump |    | makes the player automatically jump 
 animated_touch |  | animated once, transforms when user touches it
+level1 |  | this tile will represent the first level 
+level2 |  | this tile will represent the second level 
+level3 |  | this tile will represent the third level 
+level4 |  | this tile will represent the fourth level 
 
 > You can also use any color defined as an enemy color.
-> Remember that on tilemap, reference 255 is the level start (defaulting to top left if not found).
-
-> TODO : make terrains testable by bits ?? by %8 ? 
+> Remember that on tilemap, reference 255 is the level start (defaulting to top left if not found). XXX is that true ? or player color ? 
+> respawning ?
 
 ### Object Types
 
-Indices in object type definition bytes. 8 colors defined max.
+Indices in object type definition bytes. 8 properties max.
 
  property | position | comment 
 --------- | --------- | -------
@@ -113,8 +116,6 @@ player | 255 | (white) implied for first object (??)
 walkdouble | | walk but is 2x the size of its pixels (actually rendered differently)
 minibulletL | | 4 mini tiles per tile. fly horizontally, die on walls 
 minibulletLD | | 4 mini tiles per tile. fly oblique, die on walls 
-
-
 
 ### Collisions
 

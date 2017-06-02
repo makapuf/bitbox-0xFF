@@ -23,6 +23,8 @@ const static struct {uint8_t color; char label; char * text;} terrain_labels[]  
     
     {TRANSPARENT ,     ' ', "<None>" },
 };
+
+
 #define NB_OF(x) (sizeof(x)/sizeof(x[0]))
 
 // game data is loaded now and we will edit it
@@ -122,26 +124,61 @@ void line_edit_main()
 	}
 }
 
+/* tileset editor
+ *
+ * limited to tileset
+ *
+ * left : 
+ *
+ * tileset editor : idem sprite editor en fait sans proprietes, retricted to terrain tiles 
+ * + definit terrain avec mmb ? dessus 
+ * 
+ * */
 
-/*  sprite editor :
- * left = pixel editor pixels 4x4 tiles donc fenetre 64x64 pixels donc 
+/*  object type editor :
+ * left = pixel editor pixels 4x4 tiles donc fenetre 64x64 pixels donc
+ *
+ * 
  * right :
+ * title + close
+ * select sprite 0-28 : 16x8 buttons : 4 lignes
  * 
- * select sprite 0-16 : direct 16x8 buttons : 4 lignes
- * select tile (map avec 4x4)
- * select type : click many times
- * movement:  click / subclick ou juste click.
- * kill : idem
+ * tile ref : (clic on map with middle mouse button) (display hex 0xFF)
+ * show movement 
  * 
- * color sel : 64x64 - pixels de 4x4
+ * movement : click many times
+ * collision
+ * spawn
+ *  + alts ?
+ *
+ * paint pen :
+ *    (after) tool ?
+ *    current color / sel
+ *    color sel : 64x64 - pixels de 4x4 ou tile sel
+ * 
+ * 
 */
 
+/* level editor :
+ *
+ * left : paint restreint au level ok mais ne peut peindre que sur le terrain
+ *
+ * right :  
+ *  properties:  
+ *     player sprite (choisir parmi ceux definis comme player movement)
+ * 	   control
+ *     accel 2d vector
+ *     maxspped 2D vector
+ *     alt accel
+ *     altmaxspeed
+ *     maxtime
+ *
+ * song editor
+ *    pattern ids a selectionner ... (splitter ?) comme un level en fait ? jouer en boucle le niveau 
+ * */
 
-/* tileset editor : idem tile editor en fait a part proprietes ? + definit terrain dessus, pas de minimap ??  */ 
 
-/* level editor : paint ok mais ne peut peindre que sur le terrain ? unlock en ligne ? */
-
-/* song editor */ 
-
-/* instr editor */
+/* pattern / sfx editor :
+ * select type
+ * show */
 
