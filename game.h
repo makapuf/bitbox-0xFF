@@ -100,6 +100,7 @@ int load_next(); // load next file in directory
 int load_bmp (const char *filename); // --> init + load_next (cycle)
 int load_game_data (uint8_t *data);
 int sine (uint8_t phi);
+void get_level_boundingbox();
 
 // sprites
 void interpret_spritetypes();
@@ -131,7 +132,8 @@ uint8_t terrain_at(int x, int y);
 void black_mapper(void);
 
 // editor
-void frame_edit_main(void);
+void enter_edit(uint8_t mode);
+void frame_edit_main();
 void line_edit_main(); // render edit graph line
 
 

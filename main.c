@@ -319,28 +319,23 @@ void enter_title(void)
 void frame_title()
 {
 	static uint16_t gamepad_oldstate = gamepad_start;
+	const uint16_t gamepad_pressed = gamepad_buttons[0] & ~gamepad_oldstate;
 
 	// move sprites from level 0
-	if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_start) { 
+	if ( gamepad_pressed & gamepad_start) { 
 
 		// reset game
 		lives = START_LIVES;
 		level = START_LEVEL;
 		
-		// enter_leveltitle();
+		enter_leveltitle();
 		
-		// *********************************************************************************************
-		// *********************************************************************************************
-		// FIXME 
-		// *********************************************************************************************
-		// *********************************************************************************************
-		frame_handler = frame_edit_main;
-		message("enter EDIT\n");
-
-	} else if (gamepad_buttons[0] & ~gamepad_oldstate & gamepad_select) {
+	} else if (gamepad_pressed & gamepad_select) {
 		// XXX SFX
 		load_next();
 		enter_title(); // re-enter title
+	} else if ((gamepad_buttons[0] & gamepad_L && gamepad_buttons[0] & gamepad_R) || mouse_buttons ) {
+		enter_edit(0);
 	}
 
 

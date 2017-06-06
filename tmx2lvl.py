@@ -94,7 +94,7 @@ for tilemap in root.findall("layer") : # intro,1,2,3,4 - skipping bad ones TODO 
 		levelc=255
 	elif lvlname.startswith('level') : 
 		lvlid = int(lvlname[-1])-1
-		levelc = [249,7,226,121][lvlid]
+		levelc = [24,224,7,249][lvlid]
 		properties[lvlid][0]=levelc
 	else : 
 		RaiseValueError, "layers must be called 'intro', 'level 1' .. 'level 4','music' or start with an underscore(_)"

@@ -16,7 +16,7 @@ description of the level : each id is an index on the level description bytes
 level | property(0-7) | comment
 ----------|----------|---------
 color     | 0 | color of the terrain on the minimap (FIXME:  to remove)
-player_color | 1 | color of the player on the level map (ie player object id) - object type must be a player one
+player_color | 1 | color of the player on the level map (ie player object id) - FIXME: use player sprites 
 control   | 2 | see control types (FIXME : make that a property of the player object type ?)
 accel   |  3 | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
 maxspeed   | 4  | X/Y max speed as a 2D vector pixel. depends on controls
@@ -57,12 +57,15 @@ anim_kill | 168 | idem but animated
 ladder | 147 | can go up, down even with gravity
 ice | 151 | cannot stop on X, but can jump. 
 platform | 136 | cannot fall but can go through up or sideways
+level1 | 24 | this tile will represent the first level (green)
+level2 | 224 | this tile will represent the second level (red)
+level3 | 7 | this tile will represent the third level (blue)
+level4 | 249 | this tile will represent the fourth level (yellow)
+
 jump |    | makes the player automatically jump 
 animated_touch |  | animated once, transforms when user touches it
-level1 |  | this tile will represent the first level 
-level2 |  | this tile will represent the second level 
-level3 |  | this tile will represent the third level 
-level4 |  | this tile will represent the fourth level 
+
+pattern | 9 | musical patterns
 
 > You can also use any color defined as an enemy color.
 > Remember that on tilemap, reference 255 is the level start (defaulting to top left if not found). XXX is that true ? or player color ? 

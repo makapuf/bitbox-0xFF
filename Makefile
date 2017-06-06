@@ -15,13 +15,16 @@ include $(BITBOX)/kernel/bitbox.mk
 
 levels/%.bmp: levels/%.tmx
 	python2 tmx2lvl.py $^
-main.c: defs.h
+main.c: defs.h font.h
 defs.h: REFERENCE.md
 	./mk_defs.py REFERENCE.md > $@
 
 todo: main.c graph.c loader_sd.c
 	grep -n TODO $^
 levels: $(LEVELS_BMP)
+
+font.h: 4x8.png font.py 
+	python2 font.py > $@
 
 .PHONY: todo 
 clean::
