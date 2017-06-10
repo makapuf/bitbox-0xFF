@@ -19,13 +19,20 @@ struct Widget {
 };
 
 const static char hex_digits[16]="0123456789ABCDEF";
-const static uint8_t level_colors[4] = {terrain_level1, terrain_level2, terrain_level3, terrain_level4};
-static const struct {uint8_t color; char *label; char *values; char *altvalues;} control_titles[] = {
-	{0  , "Ctrl : classic", "< X Walk/Y Lad", "> X Run/Y Grav"},
-	{100, "Ctrl : side",    "< Accel/speed ", "> X:autoscroll"},
-	{249, "Ctrl : modern",  "< X Walk/Y Lad", "> X Run/Y Grav"},
-	{255, "Ctrl : infjumps","< X Walk/Y Lad", "> X Run/Y Grav"},
+const static uint8_t level_colors[4] = {
+	terrain_level1,
+	terrain_level2,
+	terrain_level3,
+	terrain_level4
 };
+
+static const struct {uint8_t color; char *label; char *values[8];} control_titles[] = {
+	{0  , "Ctrl : classic", {"Walk accel","Ladder accel","Walk Speed","Ladder speed","Run Accel","Gravity","Run maxspeed","Jmp/Fall Spd."}},
+	{100, "Ctrl : side",    {"X accel","Y accel", "X maxspeed", "Y maxspeed",0,0,"X autoscroll speed"}},
+	{249, "Ctrl : modern",	{"Walk accel","Ladder accel","Walk Speed","Ladder speed","Run Accel","Gravity","Run maxspeed","Jmp/Fall Spd."}},	
+	{255, "Ctrl : runner",  {"< X Walk/Y Lad", "> X Run/Y Grav"}},
+};
+
 
 const static struct {uint8_t color; char * text;} terrain_labels[]  = {
     {TRANSPARENT ,     " <None>" },
@@ -71,7 +78,8 @@ uint8_t sprite_selected;
 int pan_x,pan_y;
 uint8_t control_id; // id in the control_types of the current elvel
 
-int pen; // 0-255 : tileid
+int pen; // 0-255 : tileid / color id
+uint8_t tool_draw; // tool selected to draw 
 
 int m_x, m_y, d_x, d_y, m_pressed, m_clicked, m_oldpressed; // cursor coordinates / buttons
 
@@ -111,14 +119,14 @@ void update_mouse()
 void change_level(void) 
 {
 
-	if (pan_x>level_x2*16-1) 
-		pan_x=level_x2*16-1;
 	if (pan_x<level_x1*16) 
 		pan_x=level_x1*16;
-	if (pan_y>level_y2*16-1) 
-		pan_y=level_y2*16-1;
+	if (pan_x>level_x2*16) 
+		pan_x=level_x2*16;
 	if (pan_y<level_y1*16) 
 		pan_y=level_y1*16;
+	if (pan_y>level_y2*16+1) // +1 because (y+1)*16-15
+		pan_y=level_y2*16+1;
 
 	// load level control id
 	uint8_t c = get_property(level,level_control);	
@@ -156,16 +164,6 @@ void draw_grid()
 	if (vga_line%4==0)	{
 		for (int i=0;i<16;i++)
 			draw_buffer[i*16]=148;
-	}
-}
-
-void draw_mouse_cursor()
-{
-	if (vga_line>=m_y && vga_line<m_y+12) {		
-		draw_buffer[m_x]=RGB(0,0,0);
-		draw_buffer[m_x+vga_line-m_y]=RGB(0,0,0);
-		if (vga_line>m_y)
-			memset(draw_buffer + m_x +1 , RGB(255,255,255),vga_line-m_y-1);
 	}
 }
 
@@ -283,7 +281,6 @@ void minimap_click(void)
 // --------------------------------------------------------------------------------
 
 /*
- *
  * right :  
  *  properties:  
  *     player sprite : non prendre le premier sur l'ecran
@@ -323,37 +320,36 @@ void click_controlselect(int x, int y)
 		control_id += 1;
 		if (control_id==NB_OF(level_titles))	
 			control_id=0;
+		// set level property ?
 	}
 }
 
 
 // 4 values XY in the same row
-#define HEIGHT_LEVEL_VALUES 32
+#define HEIGHT_LEVEL_VALUES 64
 void draw_level_values(int y)
 {
+	if (y<8*8) {
+		char *lbl=control_titles[control_id].values[y/8];
+		if (lbl) {
+			draw_textline(y%8,lbl,BGCOLOR);
+			uint8_t v = get_property(level,y/16);
+			v = (y/8)%2 ? v&0xf : v>>4; // keep hi / lo nibble 
 
-	if (y<16) {
-
-		memset(draw_buffer+256+00,get_property(level, level_accel      )>>4 == y ? 0 : BGCOLOR,16);
-		draw_buffer[256+   (get_property(level, level_accel      )&0xf)]=0;
-		memset(draw_buffer+256+16,get_property(level, level_maxspeed   )>>4 == y ? 0 : 107,16);
-		draw_buffer[256+16+(get_property(level, level_maxspeed   )&0xf)]=0;
-		memset(draw_buffer+256+32,get_property(level, level_altaccel   )>>4 == y ? 0 : BGCOLOR,16);
-		draw_buffer[256+32+(get_property(level, level_altaccel   )&0xf)]=0;
-		memset(draw_buffer+256+48,get_property(level, level_altmaxspeed)>>4 == y ? 0 : 107,16);
-		draw_buffer[256+48+(get_property(level, level_altmaxspeed)&0xf)]=0;
-
-	} else if (y<24) {
-		draw_textline(y-16, control_titles[level].values, BGCOLOR);
-	} else if (y<32) {
-		draw_textline(y-24, control_titles[level].altvalues, BGCOLOR);
+			draw_line_letter(312/4,y%8,hex_digits[v],BGCOLOR);
+		} else {
+			draw_textline(y%8,"",BGCOLOR);
+		}
 	}
 }
 
 void click_level_values(int x, int y)
 {
 	if (y<16) {
-		const uint8_t property = (const uint8_t[4]){level_accel, level_maxspeed, level_altaccel, level_altmaxspeed}[x/16];
+		const uint8_t property = (const uint8_t[4]){
+			level_accel, level_maxspeed, level_altaccel, level_altmaxspeed
+		}[x/16];
+
 		const uint8_t val =  (y%16)<<4 | x;
 		set_property(level, property,val);
 	}
@@ -364,11 +360,11 @@ const struct Widget level_panel[] = {
 	{2,  draw_separator, 0},
 	{8,  draw_levelselect, click_levelselect},
 	{2,  draw_separator, 0},
-	{64+16, draw_tileset_mini,click_tileset_mini},
-	{2,  draw_separator, 0},
 	{8, draw_controlselect, click_controlselect},
 	{2,  draw_separator, 0},
 	{HEIGHT_LEVEL_VALUES, draw_level_values, click_level_values}, 
+	{2,  draw_separator, 0},
+	{64+16, draw_tileset_mini,click_tileset_mini},
 	{2,  draw_separator, 0},
 	{200, draw_empty,0},
 
@@ -434,6 +430,7 @@ void tilemap_click(void )
  */
 
 static uint8_t movement; // index in movement_labels table
+static uint8_t collision; // index in collision labels table
 const static struct {uint8_t color; char *label; uint8_t frames;} movement_labels[] = {
 	{ mov_nomove,     "1fr static"},
     { mov_alternate1, "2fr static"},
@@ -452,9 +449,20 @@ const static struct {uint8_t color; char *label; uint8_t frames;} movement_label
     // player ...    
 };
 
+const static struct {uint8_t color; char *label; uint8_t frames;} collision_labels[] = {
+	{ col_none,     "no collision"},
+	{ col_kill,     "kills"},
+	{ col_killnorespawn,     "kills (no respawn)"},
+	{ col_block,     "block"},
+	{ col_coin,     "+1 coin"},
+	{ col_life,     "+1 life"},
+	{ col_key,     "+1 key"},
+	{ col_end,     "end level"},
+};
+
 void change_sprite()
 {
-	// get movement from color
+	// get movement id from color (used to display)
 	uint8_t m = get_property(sprite_selected+4, property_movement);
 	for (int i=0;i<NB_OF(movement_labels);i++) {
 		if (m==movement_labels[i].color) {
@@ -462,6 +470,17 @@ void change_sprite()
 			break;
 		}
 	}
+
+	// get collision id from color (used to display)
+	m = get_property(sprite_selected+4, property_collision);
+	for (int i=0;i<NB_OF(collision_labels);i++) {
+		if (m==collision_labels[i].color) {
+			collision=i;
+			break;
+		}
+	}
+
+
 	// position map
 	m = get_property(sprite_selected+4, property_color);
 	pan_x = (m%16)*16;
@@ -508,9 +527,42 @@ void click_spr_movement(int x, int y)
 	if (m_clicked & mousebut_left) 
 		movement++;
 	else if (m_clicked & mousebut_right) 
-		movement--;
+		movement--;	
 	movement %= NB_OF(movement_labels);
+
+	// also set property on map
+	set_property(
+		sprite_selected+4,
+		property_movement,
+		movement_labels[movement].color
+		);
 }
+
+void draw_spr_collision(int y) {
+	if (y<8)
+		draw_textline(y,"Collision: ",BGCOLOR);
+	else 
+		draw_textline(y-8,collision_labels[collision].label,BGCOLOR);
+}
+
+void click_spr_collision(int x, int y) 
+{
+	if (m_clicked & mousebut_left) 
+		collision++;
+	else if (m_clicked & mousebut_right) 
+		collision--;	
+	collision %= NB_OF(collision_labels);
+
+	// also set property on map
+	set_property(
+		sprite_selected+4,
+		property_collision,
+		collision_labels[collision].color
+		);
+}
+
+
+
 #define HEIGHT_COLORMAP (64+4)
 uint8_t colormap_mode; 
 void draw_colormap(int y)
@@ -547,14 +599,36 @@ void click_colormap(int x, int y)
 }
 
 
+
+
+#define HEIGHT_TOOLCHOSE 8
+static void draw_toolselect(int y)
+{
+	for (int i=0;i<16;i++) {
+		draw_line_letter(
+			256/4+i, y,
+			"Tool:  \x8c \x8d \x8e\x8f\x90  "[i],
+			i/2-3==tool_draw ? DARKGREY : BGCOLOR
+			);
+	}
+}
+void click_toolselect(int x, int y)
+{
+	if (x>24 && x<56) tool_draw = x/8-3;
+}
+
 const struct Widget sprite_panel[] = {
-	{HEIGHT_HEADER,	draw_header, click_header}, 
+	{HEIGHT_HEADER,	draw_header,         click_header}, 
 	{2, draw_separator, 0},
 	{HEIGHT_SPR_SELECT, draw_spr_select ,click_spr_select},
 	{2, draw_separator, 0},
-	{16, draw_spr_movement, click_spr_movement},
+	{16, draw_spr_movement,              click_spr_movement},
 	{2, draw_separator, 0},
-	{HEIGHT_COLORMAP, draw_colormap, click_colormap},
+	{16, draw_spr_collision,              click_spr_collision},
+	{2, draw_separator, 0},
+	{HEIGHT_COLORMAP, draw_colormap,     click_colormap},
+	{2, draw_separator, 0},
+	{HEIGHT_TOOLCHOSE, draw_toolselect,  click_toolselect},
 
 	{200, draw_empty,0},
 };
@@ -582,10 +656,40 @@ static void sprite_draw(void)
 
 static void sprite_click(void)
 {
+	const int pos=m_x/4+pan_x+(m_y/4+pan_y)*256;
 	if (m_pressed & mousebut_left) {
-		data[m_x/4+pan_x+(m_y/4+pan_y)*256]=pen;
+		switch (tool_draw) {
+			case 2: 
+				if (pos>256) {
+					data[pos-256]=pen;
+					data[pos-255]=pen;
+					data[pos-257]=pen;
+				}
+				data[pos-1]=pen;
+				data[pos+255]=pen;
+				// fallthrough
+			case 1: 
+				data[pos+  1]=pen;
+				data[pos+256]=pen;
+				data[pos+257]=pen;
+				// fallthrough
+			case 0: 
+				data[pos]=pen;
+				break;
+			case 3:
+				// copy whole pattern from tile id pen
+
+				for (int i=0;i<16;i++)
+					memcpy(&data[pos+i*256],&data[(pen%16)*16+((pen/16)*16+i)*256],16);
+				break;
+		}
+
 	} else if (m_pressed & mousebut_right) {
-		pen = data[m_x/4+pan_x+(m_y/4+pan_y)*256];
+		if (tool_draw<3)
+			pen = data[m_x/4+pan_x+(m_y/4+pan_y)*256];
+		else // copy pattern id
+			pen = (m_x/4+pan_x)/16 | ((m_y/4+pan_y)/16)<<4;
+		
 	} else if (m_pressed & mousebut_middle) {
 		pan_x -= d_x;
 		if (pan_x<0) pan_x=0;
@@ -593,7 +697,14 @@ static void sprite_click(void)
 		pan_y -= d_y;
 		if (pan_y<0) pan_y=0;
 		if (pan_y>256) pan_y=256;
-	}
+
+		// also set property 
+		set_property(
+			sprite_selected+4,
+			property_color,
+			((pan_y+10)/16)<<4 | ((pan_x+10)/16)
+			);
+	} 
 }
 
 /* pattern / sfx editor :
@@ -610,6 +721,20 @@ static void sprite_click(void)
  * + definit terrain avec mmb ? dessus 
  * 
  * */
+
+// ----------------------------------------------------------------------------------------------------------------
+// Tileset 
+
+
+
+const struct Widget tileset_panel[] = {
+	{HEIGHT_HEADER,	draw_header, click_header}, 
+	{2, draw_separator, 0},
+	{HEIGHT_COLORMAP, draw_colormap, click_colormap},
+
+	{200, draw_empty,0},
+};
+
 
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -657,6 +782,18 @@ void frame_edit_main()
 	mouse_x=0; mouse_y=0;
 }
 
+
+void draw_mouse_cursor()
+{
+	if (vga_line>=m_y && vga_line<m_y+10) {		
+		draw_buffer[m_x]=RGB(0,0,0);
+		draw_buffer[m_x+vga_line-m_y+1]=RGB(0,0,0);
+		memset(draw_buffer + m_x +1 , RGB(255,255,255),vga_line-m_y);
+	} else if (vga_line==m_y+10)
+		memset(draw_buffer + m_x +1 , RGB(64,64,64),vga_line-m_y);
+}
+
+
 void line_edit_main()
 {
 	main_area_draw();
@@ -675,22 +812,28 @@ void enter_edit(uint8_t mode)
 			main_area_draw = minimap_draw;
 			main_area_click = minimap_click;
 			panel = main_panel;
-			header_title = "\x88\x88 Minimap      ";
+			header_title = "\x88\x88 Minimap";
 			break;
 		case 1 : 
 			main_area_draw = tilemap_draw;
 			main_area_click = tilemap_click;
 			panel = level_panel;
-			header_title = "\x82\x83 Levels       ";
+			header_title = "\x82\x83 Levels";
 			get_level_boundingbox();
 			change_level();
-
 			break;
 		case 2: 
 			main_area_draw  = sprite_draw;
 			main_area_click = sprite_click;
 			panel = sprite_panel;
-			header_title = "\x84\x85 Sprites";
+			header_title = "\x86\x87 Sprites";
+			change_sprite();
+			break;
+		case 3: 
+			main_area_draw  = sprite_draw;
+			main_area_click = sprite_click;
+			panel = tileset_panel;
+			header_title = "\x80\x81 Tile set";
 			change_sprite();
 			break;
 	}
