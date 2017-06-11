@@ -19,12 +19,7 @@ struct Widget {
 };
 
 const static char hex_digits[16]="0123456789ABCDEF";
-const static uint8_t level_colors[4] = {
-	terrain_level1,
-	terrain_level2,
-	terrain_level3,
-	terrain_level4
-};
+
 
 static const struct {uint8_t color; char *label; char *values[8];} control_titles[] = {
 	{0  , "Ctrl : classic", {"Walk accel","Ladder accel","Walk Speed","Ladder speed","Run Accel","Gravity","Run maxspeed","Jmp/Fall Spd."}},
@@ -118,7 +113,6 @@ void update_mouse()
 
 void change_level(void) 
 {
-
 	if (pan_x<level_x1*16) 
 		pan_x=level_x1*16;
 	if (pan_x>level_x2*16) 
@@ -174,14 +168,14 @@ void draw_grid()
 void draw_header(int y) 
 {
 	if (y<8) 
-		draw_textline(y,header_title,47);
+		draw_textline(y,"\x88\x88 \x82\x83 \x86\x87 \x80\x81 \x84\x85",47);
 	else 
-		draw_textline(y-8,"\x88\x88 \x82\x83 \x86\x87 \x80\x81 \x84\x85",47);
+		draw_textline(y-8,header_title,47);
 }
 
 void click_header(int x, int y)
 {
-	if (m_clicked & mousebut_left && y>8) {
+	if (m_clicked & mousebut_left && y<8) {
 		enter_edit(x/12);
 	}
 }
@@ -226,6 +220,30 @@ void click_tileset_mini(int x, int y)
 		pen = (y/4)*16+x/4;
 }
 
+static const char *const filemenu_str[] = {
+	"Save",
+	"Load",
+	"Load backup",
+	"PLAY"
+};
+
+#define HEIGHT_FILEMENU (NB_OF(filemenu_str)*8)
+void draw_file_menu(int y)
+{
+	draw_textline(y%8,filemenu_str[y/8],BGCOLOR);
+}
+
+void click_file_menu(int x, int y)
+{
+	if (m_clicked & mousebut_left) {	
+		switch (y/8) {
+			case 0: 
+				// save from file_ops, making a backup
+				save_level();
+				break;
+		}
+	}
+}
 
 void draw_terrain_list(int y) 
 {
@@ -247,6 +265,9 @@ const struct Widget main_panel[] = {
 	{ 2, draw_separator, 0},
 	{NB_OF(terrain_labels)*8, draw_terrain_list, click_terrain_list},
 	{ 2, draw_separator, 0},
+	{20, draw_empty, 0},
+	{ 2, draw_separator, 0},
+	{HEIGHT_FILEMENU, draw_file_menu,click_file_menu},
 	{200, draw_empty, 0},
 };
 
@@ -325,7 +346,6 @@ void click_controlselect(int x, int y)
 }
 
 
-// 4 values XY in the same row
 #define HEIGHT_LEVEL_VALUES 64
 void draw_level_values(int y)
 {
@@ -333,8 +353,8 @@ void draw_level_values(int y)
 		char *lbl=control_titles[control_id].values[y/8];
 		if (lbl) {
 			draw_textline(y%8,lbl,BGCOLOR);
-			uint8_t v = get_property(level,y/16);
-			v = (y/8)%2 ? v&0xf : v>>4; // keep hi / lo nibble 
+			uint8_t v = get_property(level,level_accel+y/16);
+			v = (y/8)%2 ? v>>4: v&0xf; // keep hi / lo nibble 
 
 			draw_line_letter(312/4,y%8,hex_digits[v],BGCOLOR);
 		} else {
@@ -345,13 +365,14 @@ void draw_level_values(int y)
 
 void click_level_values(int x, int y)
 {
-	if (y<16) {
-		const uint8_t property = (const uint8_t[4]){
-			level_accel, level_maxspeed, level_altaccel, level_altmaxspeed
-		}[x/16];
+	// properties are stored as 8 1 nibble "properties" in 4 bytes properties
+	const uint8_t property = y/8;
+	const uint8_t val =  x/4;
 
-		const uint8_t val =  (y%16)<<4 | x;
-		set_property(level, property,val);
+	if (property%2==0) {
+		set_property(level, level_accel+property/2, (get_property(level, level_accel+property/2) & 0xF0) | val);
+	} else {
+		set_property(level, level_accel+property/2, (get_property(level, level_accel+property/2) & 0x0F) | val<<4);
 	}
 }
 
@@ -360,7 +381,7 @@ const struct Widget level_panel[] = {
 	{2,  draw_separator, 0},
 	{8,  draw_levelselect, click_levelselect},
 	{2,  draw_separator, 0},
-	{8, draw_controlselect, click_controlselect},
+	{8,  draw_controlselect, click_controlselect},
 	{2,  draw_separator, 0},
 	{HEIGHT_LEVEL_VALUES, draw_level_values, click_level_values}, 
 	{2,  draw_separator, 0},
@@ -599,8 +620,6 @@ void click_colormap(int x, int y)
 }
 
 
-
-
 #define HEIGHT_TOOLCHOSE 8
 static void draw_toolselect(int y)
 {
@@ -801,8 +820,6 @@ void line_edit_main()
 	draw_mouse_cursor();
 }
 
-
-
 void enter_edit(uint8_t mode)
 {
 	message("enter EDIT mode %d\n",mode);
@@ -812,13 +829,13 @@ void enter_edit(uint8_t mode)
 			main_area_draw = minimap_draw;
 			main_area_click = minimap_click;
 			panel = main_panel;
-			header_title = "\x88\x88 Minimap";
+			header_title = " \x88\x88 Minimap";
 			break;
 		case 1 : 
 			main_area_draw = tilemap_draw;
 			main_area_click = tilemap_click;
 			panel = level_panel;
-			header_title = "\x82\x83 Levels";
+			header_title = " \x82\x83 Levels";
 			get_level_boundingbox();
 			change_level();
 			break;
@@ -826,14 +843,14 @@ void enter_edit(uint8_t mode)
 			main_area_draw  = sprite_draw;
 			main_area_click = sprite_click;
 			panel = sprite_panel;
-			header_title = "\x86\x87 Sprites";
+			header_title = " \x86\x87 Sprites";
 			change_sprite();
 			break;
 		case 3: 
 			main_area_draw  = sprite_draw;
 			main_area_click = sprite_click;
 			panel = tileset_panel;
-			header_title = "\x80\x81 Tile set";
+			header_title = " \x80\x81 Tile set";
 			change_sprite();
 			break;
 	}

@@ -61,6 +61,7 @@ struct SpriteType {
 
 // Variables
 // -----------------------------------
+extern const uint8_t level_colors[4]; // level -> its color
 
 extern void (*frame_handler)( void ); // pointer to frame handler.
 
@@ -99,6 +100,9 @@ int loader_init (); // init loader
 int load_next(); // load next file in directory
 int load_bmp (const char *filename); // --> init + load_next (cycle)
 int load_game_data (uint8_t *data);
+int save_level(); // save current level to current, making backup
+
+
 int sine (uint8_t phi);
 void get_level_boundingbox();
 

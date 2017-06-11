@@ -39,11 +39,10 @@ static FIL file;
 static struct BMPFileHeader file_header;
 static struct BMPImgHeader img_header;
 
-// XXX no just cycle and keey dir structure
+// XXX no just cycle and key dir structure
 int nb_files;
 char filenames[MAX_FILES][13]; // 8+3 +. + 1 chr0
-int current_file;
-char full_path[80]; // not on stack
+
 
 FILINFO fno;
 DIR dir;
@@ -55,8 +54,12 @@ int loader_init()
 	if (f_mount(&fs,"",1) !=  FR_OK ) {  // mount now
     	message("Error mounting filesystem !");die (2,1);
 	}
+	// change dir 
+	if (f_chdir(ROOT_DIR) != FR_OK) {
+    	message("Error changing directory !");die (2,2);		
+	}
 	// open dir
-    if (f_opendir(&dir, ROOT_DIR) != FR_OK ) {
+    if (f_opendir(&dir, ".") != FR_OK ) {
     	message("Error opening directory !");die (2,2);
     }
 
@@ -86,7 +89,7 @@ int load_next()
 
 		    if (fno.fname[0] == 0) { // end of dir ? rescan
 		    	f_closedir(&dir);
-			    if (f_opendir(&dir, ROOT_DIR) != FR_OK ) {
+			    if (f_opendir(&dir, ".") != FR_OK ) {
 			    	message("Error reloading directory !");
 			    	die (2,4);
 			    }
@@ -106,7 +109,6 @@ int load_next()
 
 	message("now loading : %s\n",fn);
 	return load_bmp(fn);
-
 }
 
 
@@ -116,13 +118,8 @@ int  load_bmp(const char *filename)
 	int res;
 	unsigned long nb;
 
-	// make full path
-	strcpy(full_path,ROOT_DIR);
-	strcat(full_path,"/");
-	strcat(full_path,filename);
-
-	// mount drive
-	res=f_open (&file,full_path, FA_READ);
+	// open file
+	res=f_open (&file,filename, FA_READ);
 	if (res!=FR_OK){
 		message("could not open file %s : error %x \n",filename,res);
 		return res;
@@ -175,8 +172,89 @@ int load_game_data(uint8_t *data)
 	return load_pixels(LEVEL_HEIGHT, data);
 }
 
-
-void close_file()
+// rename given file to a .bkp file
+static int make_backup(char *filename)
 {
+	char new_name[14], *c;
+
+	message("renaming %s",fno.fname);
+	strncpy(new_name,fno.fname,sizeof(new_name)-1);
+
+	for (c=new_name; *c; c++) {
+		if (*c=='.') break;
+	}
+
+
+	c[0]='.';c[1]='b'; c[2]='k'; c[3]='p'; 
+	message(" to %s\n",new_name);
+	return f_rename(fno.fname,new_name);
+	
+
+}
+
+static int save_bmp(char *filename)
+{
+	int res;
+	unsigned long nb, pos=0;
+
+	// close & reopen file
+	res=f_open (&file,filename, FA_CREATE_ALWAYS | FA_WRITE);
+	if (res!=FR_OK){
+		message("could not open file %s for writing : error %x \n",filename,res);
+		return res;
+	}
+
+	f_write (&file, &file_header,sizeof(file_header),&nb);
+	pos +=nb;
+	// may write junk after 40 useful bytes ?
+	f_write (&file, &img_header ,img_header.headersize,&nb); 
+	pos +=nb;
+	
+	// write color map
+	for (int i=0;i<256;i++) {
+		uint8_t r = (i&0b11100000);
+		uint8_t g = (i&0b00011000)<<3 | (i&1)<<5;
+		uint8_t b = (i&0b00000111)<<5;
+
+		uint8_t color[4] = {b|b>>3, g|g>>3, r|r>>3,0}; // RGBA as bgra ?
+		f_write(&file, &color,4,&nb);
+		pos +=nb;
+	}
+	
+	// write Gap 1 garbage ? 
+	if (file_header.offbits-pos) {
+		message("Gap1 is %d bytes wide \n",file_header.offbits-pos);
+		f_write(&file, data, file_header.offbits-pos, &nb);
+		pos +=nb;
+	}
+
+	for (int y=LEVEL_HEIGHT-1;y>=0;y--) {
+		res = f_write (&file, &data[y*IMAGE_WIDTH],IMAGE_WIDTH,&nb);
+	}
 	f_close(&file);
+
+	return res;
+}
+
+
+int save_level()
+{
+	message("saving file %s\n",fno.fname);
+	f_close(&file);
+
+	make_backup(fno.fname);
+	// save as new file
+	int res = save_bmp(fno.fname);
+	if (res) {
+		message("could not save %s\n",fno.fname);
+	} else {
+		message("saved %s\n",fno.fname);
+	}
+
+	// now reopen file for reading
+	res = f_open (&file,fno.fname, FA_READ);
+	if (res) {
+		message("could not open %s back for reading !",fno.fname);
+		die (4,4);
+	}
 }

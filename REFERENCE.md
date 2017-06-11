@@ -15,15 +15,14 @@ description of the level : each id is an index on the level description bytes
 
 level | property(0-7) | comment
 ----------|----------|---------
-color     | 0 | color of the terrain on the minimap (FIXME:  to remove)
-player_color | 1 | color of the player on the level map (ie player object id) - FIXME: use player sprites 
+color     | 0 | Not used anymore
+player_color | 1 | color of the player on the level map (ie player object id) - FIXME: use player typed sprites 
 control   | 2 | see control types (FIXME : make that a property of the player object type ?)
 accel   |  3 | X/Y (acceleration/gravity) as a 2D vector pixel. depends on controls
 maxspeed   | 4  | X/Y max speed as a 2D vector pixel. depends on controls
 altaccel | 5 | X/Y alt acceleration / gravity (see controls)
 altmaxspeed   | 6 | running / jumping X/Y max speed as a 2D vector pixel. depends on controls
 maxtime | 7 | must finish level before Nx2 seconds. If set to zero, just records it
-
 
 ### Control types
 

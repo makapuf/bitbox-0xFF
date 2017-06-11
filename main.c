@@ -45,9 +45,16 @@ int sine(uint8_t phi)
 
 
 // -- tilemap-related functions
+const uint8_t level_colors[4] = {
+	terrain_level1,
+	terrain_level2,
+	terrain_level3,
+	terrain_level4
+};
+
 void get_level_boundingbox(void)
 {
-	current_level_color=get_property(level,level_color);
+	current_level_color=level_colors[level];
 
 	// scan level enclosing rectangle in tiles and fill level_x1,y1,x2,y2
 	for (int x=0;x<16;x++) {
