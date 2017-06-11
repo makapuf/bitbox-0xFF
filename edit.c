@@ -222,9 +222,9 @@ void click_tileset_mini(int x, int y)
 
 static const char *const filemenu_str[] = {
 	"Save",
-	"Load",
-	"Load backup",
-	"PLAY"
+//	"Load",
+//	"Load backup",
+//	"PLAY"
 };
 
 #define HEIGHT_FILEMENU (NB_OF(filemenu_str)*8)
